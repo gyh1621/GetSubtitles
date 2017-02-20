@@ -76,11 +76,11 @@ class SubHDDownloader(object):
         except requests.Timeout:
             return None, None
         if 'rar' in download_link:
-            datatype = 'rar'
+            datatype = '.rar'
         elif 'zip' in download_link:
-            datatype = 'zip'
+            datatype = '.zip'
         elif '7z' in download_link:
-            datatype = '7z'
+            datatype = '.7z'
         else:
             datatype = 'Unknown'
 
