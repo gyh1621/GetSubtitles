@@ -10,7 +10,7 @@ from guessit import guessit
 from io import BytesIO
 from collections import OrderedDict as order_dict
 from traceback import format_exc
-from requests import Timeout
+from requests import exceptions
 
 
 class GetSubtitles(object):
@@ -238,8 +238,8 @@ class GetSubtitles(object):
                         print('├  unsupported file type %s' % datatype[1:])
                     sub_dict.pop(sub_choice)
 
-            except Timeout:
-                self.s_error += 'connect failed, check network status.'  # TODO, to test
+            except exceptions.Timeout or exceptions.ConnectionError:
+                self.s_error += 'connect failed, check network status.'
             except rarfile.RarCannotExec:
                 self.s_error += 'Unrar not installed?'
             except Exception as e:
@@ -257,9 +257,6 @@ class GetSubtitles(object):
                     self.failed_list.append({'name': one_video, 'path': video_info['path'],
                                              'error': self.s_error, 'trace_back': self.f_error})
                     print('├ error:' + self.s_error)
-
-                if 'connect failed, check network status.' in self.s_error or 'Unrar not installed?' in self.s_error:
-                    break
 
         if len(self.failed_list):
             print('\n===============================FAILED LIST===============================\n')
