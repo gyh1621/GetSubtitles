@@ -5,7 +5,7 @@ import os
 import zipfile
 import rarfile
 import argparse
-from subhd import SubHDDownloader
+from getsub.subhd import SubHDDownloader
 from guessit import guessit
 from io import BytesIO
 from collections import OrderedDict as order_dict

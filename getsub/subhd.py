@@ -5,7 +5,7 @@ import requests
 import re
 from collections import OrderedDict as order_dict
 from bs4 import BeautifulSoup
-from progress_bar import ProgressBar
+from getsub.progress_bar import ProgressBar
 from contextlib import closing
 
 
