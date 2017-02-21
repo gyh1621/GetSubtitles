@@ -16,12 +16,12 @@ class ProgressBar(object):
     def refresh(self, cur_len):
         terminal_width = get_terminal_size().columns  # 获取终端宽度
         info = "%s '%s'...  %.2f%%" % (self.prefix_info, self.title, cur_len/self.total * 100)
-        while len(info) > terminal_width - 20:
+        while len(info) > terminal_width - 30:
             self.title = self.title[0:-4] + '...'
             info = "%s '%s'...  %.2f%%" % (self.prefix_info, self.title, cur_len/self.total * 100)
         end_str = '\r' if cur_len < self.total else '\n'
         if end_str == '\r':
-            print(' ' * terminal_width, end=end_str)
+            print(' ' * (terminal_width - 5), end=end_str)
         print(info, end=end_str)
 
     def count_down(self):
@@ -29,7 +29,7 @@ class ProgressBar(object):
 
         for i in range(self.count_time + 1):
             info = "%s %ss" % (self.prefix_info, self.count_time - i)
-            print(' ' * terminal_width, end='\r')
+            print(' ' * (terminal_width - 5), end='\r')
             print(info, end='\r')
             sleep(1)
 
@@ -41,8 +41,10 @@ def main():
     bar = ProgressBar('Downloading', 'test', 100)
     for i in range(101):
         # print('1')
-        time.sleep(0.07)
+        time.sleep(0.05)
         bar.refresh(i)
+    bar = ProgressBar('Count down...', count_time=10)
+    bar.count_down()
 
 if __name__ == '__main__':
     main()
