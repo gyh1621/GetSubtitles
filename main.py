@@ -226,7 +226,7 @@ class GetSubtitles(object):
                     sub_choice = self.choose_subtitle(sub_dict)
                     if self.query:
                         print('├ ')
-                    datatype, sub_data_bytes = self.subhd.download_file(sub_dict[sub_choice]['link'])
+                    datatype, sub_data_bytes = self.subhd.download_file(sub_choice, sub_dict[sub_choice]['link'])
 
                     if datatype in self.support_file_list:
                         extract_sub_name = self.extract_subtitle(one_video, video_info['path'],

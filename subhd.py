@@ -5,6 +5,8 @@ import requests
 import re
 from collections import OrderedDict as order_dict
 from bs4 import BeautifulSoup
+from progress_bar import ProgressBar
+from contextlib import closing
 
 ''' SubHD 字幕下载器
 '''
@@ -64,15 +66,23 @@ class SubHDDownloader(object):
         # sub_dict = order_dict(sorted(sub_dict.items(), key=lambda e: e[1], reverse=True))
         return sub_dict
 
-    def download_file(self, sub_url):
+    def download_file(self, file_name, sub_url):
 
-        """ 传入字幕页面链接，返回压缩包类型，压缩包字节数据 """
+        """ 传入字幕页面链接， 字幕包标题， 返回压缩包类型，压缩包字节数据 """
 
         sid = sub_url.split('/')[-1]
         r = requests.post('http://subhd.com/ajax/down_ajax', data={'sub_id': sid}, headers=self.headers)
         download_link = re.search('http:.*(?=")', r.content.decode('unicode-escape')).group(0).replace('\\/', '/')
         try:
-            sub_data_bytes = requests.get(download_link, timeout=10).content
+            with closing(requests.get(download_link, stream=True)) as response:
+                chunk_size = 1024  # 单次请求最大值
+                content_size = int(response.headers['content-length'])  # 内容体总大小
+                bar = ProgressBar('├ Get', file_name.strip(), content_size)
+                sub_data_bytes = b''
+                for data in response.iter_content(chunk_size=chunk_size):
+                    sub_data_bytes += data
+                    bar.refresh(len(sub_data_bytes))
+            # sub_data_bytes = requests.get(download_link, timeout=10).content
         except requests.Timeout:
             return None, None
         if 'rar' in download_link:
