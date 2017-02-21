@@ -219,7 +219,6 @@ class GetSubtitles(object):
                 sub_dict = self.subhd.get_subtitles(keywords, sub_num=self.sub_num)
                 if len(sub_dict) == 0:
                     self.s_error += 'no search results'
-                    print('├ no search results')
                     continue
 
                 extract_sub_name = None
@@ -244,16 +243,16 @@ class GetSubtitles(object):
             except Exception as e:
                 self.s_error += str(e)
                 self.f_error += format_exc()
+            finally:
+                if 'extract_sub_name' in dir() and not extract_sub_name:  # 自动模式下所有字幕包均没有猜测字幕
+                    self.s_error += "failed to guess one subtitle, use '-q' to try query mode."
 
-            if not extract_sub_name: # 自动模式下所有字幕包均没有猜测字幕
-                self.s_error += "failed to guess one subtitle, use '-q' to try query mode."
-
-            if self.s_error:
-                self.failed_list.append({'name': one_video, 'path': video_info['path'],
-                                         'error': self.s_error, 'trace_back': self.f_error})
-                print('├ error:' + self.s_error)
-            if self.s_error in ['connect failed, check network status.', 'Unrar not installed?']:
-                break
+                if self.s_error:
+                    self.failed_list.append({'name': one_video, 'path': video_info['path'],
+                                             'error': self.s_error, 'trace_back': self.f_error})
+                    print('├ error:' + self.s_error)
+                if self.s_error in ['connect failed, check network status.', 'Unrar not installed?']:
+                    break
 
         if len(self.failed_list):
             print('\n===============================FAILED LIST===============================\n')
