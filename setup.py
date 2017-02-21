@@ -9,7 +9,6 @@ setup(
     name='getsub',
     version='1.0',
     packages=['getsub'],
-    exclude_package_date={'':['.gitignore']},
     install_requires=[    # 依赖列表
         'requests>=2.9, <2.10',
         'bs4>=0.0.1',
