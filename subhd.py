@@ -8,6 +8,7 @@ from bs4 import BeautifulSoup
 from progress_bar import ProgressBar
 from contextlib import closing
 
+
 ''' SubHD 字幕下载器
 '''
 
@@ -73,7 +74,16 @@ class SubHDDownloader(object):
         """ 传入字幕页面链接， 字幕包标题， 返回压缩包类型，压缩包字节数据 """
 
         sid = sub_url.split('/')[-1]
-        r = requests.post('http://subhd.com/ajax/down_ajax', data={'sub_id': sid}, headers=self.headers)
+
+        while True:
+            r = requests.post('http://subhd.com/ajax/down_ajax', data={'sub_id': sid}, headers=self.headers)
+            message = r.content.decode('unicode-escape')
+            if '下载频率过高，请等候一分钟' in message:
+                bar = ProgressBar('├ 下载频率过高，请等候一分钟', count_time=60)
+                bar.count_down()
+            else:
+                break
+
         download_link = re.search('http:.*(?=")', r.content.decode('unicode-escape')).group(0).replace('\\/', '/')
         try:
             with closing(requests.get(download_link, stream=True)) as response:

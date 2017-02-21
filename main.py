@@ -87,7 +87,7 @@ class GetSubtitles(object):
 
     def choose_subtitle(self, sub_dict):
 
-        """ 传入候选字幕字典，若为查询模式返回选择的字幕名称， 否则返回字幕字典第一个字幕的名称 """
+        """ 传入候选字幕字典，若为查询模式返回选择的字幕包名称， 否则返回字幕字典第一个字幕包的名称 """
 
         if not self.query:
             return list(sub_dict.keys())[0]
@@ -222,37 +222,43 @@ class GetSubtitles(object):
                     continue
 
                 extract_sub_name = None
-                while not extract_sub_name:
+                while not extract_sub_name and len(sub_dict) > 0:  # 遍历字幕包直到有猜测字幕
                     sub_choice = self.choose_subtitle(sub_dict)
                     if self.query:
                         print('├ ')
                     datatype, sub_data_bytes = self.subhd.download_file(sub_choice, sub_dict[sub_choice]['link'])
 
                     if datatype in self.support_file_list:
+                        # 获得猜测字幕名称，查询模式必有返回值，自动模式无猜测值返回None
                         extract_sub_name = self.extract_subtitle(one_video, video_info['path'],
                                                             datatype, sub_data_bytes, info_dict)
                         if extract_sub_name:
                             print('├ ' + extract_sub_name + '\n')
                     elif self.query:  # 查询模式下下载字幕包为不支持类型
                         print('├  unsupported file type %s' % datatype[1:])
-                        sub_dict.pop(sub_choice)
+                    sub_dict.pop(sub_choice)
 
             except Timeout:
-                self.s_error += 'connect failed, check network status.'
+                self.s_error += 'connect failed, check network status.'  # TODO, to test
             except rarfile.RarCannotExec:
                 self.s_error += 'Unrar not installed?'
             except Exception as e:
-                self.s_error += str(e)
+                self.s_error += str(e) + '. '
                 self.f_error += format_exc()
             finally:
-                if 'extract_sub_name' in dir() and not extract_sub_name:  # 自动模式下所有字幕包均没有猜测字幕
+                if 'extract_sub_name' in dir() and not extract_sub_name and len(sub_dict) == 0:
+                    # 自动模式下所有字幕包均没有猜测字幕
                     self.s_error += " failed to guess one subtitle, use '-q' to try query mode."
+
+                if self.s_error and not self.debug:
+                    self.s_error += "add --debug to get more info of the error"
 
                 if self.s_error:
                     self.failed_list.append({'name': one_video, 'path': video_info['path'],
                                              'error': self.s_error, 'trace_back': self.f_error})
                     print('├ error:' + self.s_error)
-                if self.s_error in ['connect failed, check network status.', 'Unrar not installed?']:
+
+                if 'connect failed, check network status.' in self.s_error or 'Unrar not installed?' in self.s_error:
                     break
 
         if len(self.failed_list):
