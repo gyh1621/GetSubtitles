@@ -231,7 +231,8 @@ class GetSubtitles(object):
                     if datatype in self.support_file_list:
                         extract_sub_name = self.extract_subtitle(one_video, video_info['path'],
                                                             datatype, sub_data_bytes, info_dict)
-                        print('├ ' + extract_sub_name + '\n')
+                        if extract_sub_name:
+                            print('├ ' + extract_sub_name + '\n')
                     elif self.query:  # 查询模式下下载字幕包为不支持类型
                         print('├  unsupported file type %s' % datatype[1:])
                         sub_dict.pop(sub_choice)
@@ -245,7 +246,7 @@ class GetSubtitles(object):
                 self.f_error += format_exc()
             finally:
                 if 'extract_sub_name' in dir() and not extract_sub_name:  # 自动模式下所有字幕包均没有猜测字幕
-                    self.s_error += "failed to guess one subtitle, use '-q' to try query mode."
+                    self.s_error += " failed to guess one subtitle, use '-q' to try query mode."
 
                 if self.s_error:
                     self.failed_list.append({'name': one_video, 'path': video_info['path'],
