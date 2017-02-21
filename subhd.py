@@ -31,6 +31,8 @@ class SubHDDownloader(object):
                 字幕字典{'字幕名'：{'lan':'字幕包含语言值', 'link': '字幕链接'}}，按语言值降序排列
                 字幕包含语言值：英文加1， 繁体加2， 简体加4， 双语加8 """
 
+        print('├ Searching...', end='\r')
+
         keyword = ''
         for one in keywords:
             keyword += (one + ' ')
