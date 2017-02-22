@@ -1,5 +1,6 @@
 # coding: utf8
 from setuptools import setup
+from getsub.__init__ import __version__
 
 setup(
     author="gyh1621",
@@ -7,7 +8,7 @@ setup(
     description="download subtitles from subhd.com",
     license="MIT",
     name='getsub',
-    version='1.0',
+    version=__version__,
     packages=['getsub'],
     install_requires=[    # 依赖列表
         'requests>=2.9, <2.10',

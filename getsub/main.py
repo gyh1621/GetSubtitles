@@ -11,6 +11,7 @@ from io import BytesIO
 from collections import OrderedDict as order_dict
 from traceback import format_exc
 from requests import exceptions
+from getsub.__init__ import __version__
 
 
 class GetSubtitles(object):
@@ -276,7 +277,7 @@ class GetSubtitles(object):
 
 def main():
 
-    arg_parser = argparse.ArgumentParser(prog='GetSubtitles', epilog='@guoyuhang',
+    arg_parser = argparse.ArgumentParser(prog='GetSubtitles', epilog='getsub %s \n\n@guoyuhang' % __version__,
                                          description='download subtitles from subhd.com',
                                          formatter_class=argparse.RawTextHelpFormatter)
     arg_parser.add_argument('name', help="the video's name or full path "
