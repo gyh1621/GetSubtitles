@@ -66,7 +66,9 @@ class SubHDDownloader(object):
                 continue
 
             break
-        # sub_dict = order_dict(sorted(sub_dict.items(), key=lambda e: e[1], reverse=True))
+
+        if list(sub_dict.items())[0][1]['lan'] < 8:  # 第一个候选字幕没有双语
+            sub_dict = order_dict(sorted(sub_dict.items(), key=lambda e: e[1]['lan'], reverse=True))
         return sub_dict
 
     def download_file(self, file_name, sub_url):

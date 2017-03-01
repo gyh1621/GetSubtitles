@@ -182,7 +182,6 @@ class GetSubtitles(object):
 
         os.chdir(v_path)  # 切换到视频所在文件夹
 
-        sub_ori_name = os.path.split(sub_name)[1]
         v_name_without_format = os.path.splitext(v_name)[0]
         sub_new_name = v_name_without_format + os.path.splitext(sub_name)[1]  # video_name + sub_type
 
