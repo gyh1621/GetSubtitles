@@ -267,11 +267,13 @@ class GetSubtitles(object):
                     elif self.query:  # 查询模式下下载字幕包为不支持类型
                         print('├  unsupported file type %s' % datatype[1:])
                     sub_dict.pop(sub_choice)
-
             except exceptions.Timeout or exceptions.ConnectionError:
                 self.s_error += 'connect failed, check network status.'
             except rarfile.RarCannotExec:
                 self.s_error += 'Unrar not installed?'
+            except AttributeError:
+                self.s_error += 'unknown error. try again.'
+                self.f_error += format_exc()
             except Exception as e:
                 self.s_error += str(e) + '. '
                 self.f_error += format_exc()
