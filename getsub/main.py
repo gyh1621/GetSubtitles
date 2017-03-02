@@ -5,13 +5,13 @@ import os
 import zipfile
 import rarfile
 import argparse
-from getsub.subhd import SubHDDownloader
 from guessit import guessit
 from io import BytesIO
 from collections import OrderedDict as order_dict
 from traceback import format_exc
 from requests import exceptions
 from getsub.__init__ import __version__
+from getsub.subhd import SubHDDownloader
 
 
 class GetSubtitles(object):
@@ -162,20 +162,49 @@ class GetSubtitles(object):
         max_pos = score.index(max_score)
         return sublist[max_pos]
 
+    def get_file_list(self, file_handler):
+
+        """ 传入一个压缩文件控制对象，读取对应压缩文件内文件列表。
+            返回 {one_sub: file_handler} """
+
+        sub_lists_dict = dict()
+        for one_file in file_handler.namelist():
+
+            if one_file[-1] == '/':
+                continue
+            if os.path.splitext(one_file)[-1] in self.sub_format_list:
+                sub_lists_dict[one_file] = file_handler
+                continue
+
+            if os.path.splitext(one_file)[-1] in self.support_file_list:
+                sub_buff = BytesIO(file_handler.read(one_file))
+                datatype = os.path.splitext(one_file)[-1]
+                if datatype == '.zip':
+                    sub_file_handler = zipfile.ZipFile(sub_buff, mode='r')
+                elif datatype == '.rar':
+                    sub_file_handler = rarfile.RarFile(sub_buff, mode='r')
+                sub_lists_dict.update(self.get_file_list(sub_file_handler))
+
+        return sub_lists_dict
+
     def extract_subtitle(self, v_name, v_path, datatype, sub_data_bytes, v_info_dict):
 
         """ 接受下载好的字幕包字节数据， 猜测字幕并解压。 """
 
         sub_buff = BytesIO()
         sub_buff.write(sub_data_bytes)
+
         if datatype == '.zip':
             file_handler = zipfile.ZipFile(sub_buff, mode='r')
         elif datatype == '.rar':
             file_handler = rarfile.RarFile(sub_buff, mode='r')
 
-        sub_lists = [x for x in file_handler.namelist() if x[-1] != '/']
+        sub_lists_dict = dict()
+        sub_lists_dict.update(self.get_file_list(file_handler))
 
-        sub_name = self.guess_subtitle(sub_lists, v_info_dict)
+        # sub_lists = [x for x in file_handler.namelist() if x[-1] != '/']
+
+        sub_name = self.guess_subtitle(list(sub_lists_dict.keys()), v_info_dict)
 
         if not sub_name:  # 自动模式下无最佳猜测
             return None
@@ -190,6 +219,7 @@ class GetSubtitles(object):
                 os.remove(v_name_without_format + one_sub_type)
 
         with open(sub_new_name, 'wb') as sub:  # 保存字幕
+            file_handler = sub_lists_dict[sub_name]
             sub.write(file_handler.read(sub_name))
 
         if self.more:  # 保存原字幕压缩包

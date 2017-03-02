@@ -5,8 +5,8 @@ import requests
 import re
 from collections import OrderedDict as order_dict
 from bs4 import BeautifulSoup
-from getsub.progress_bar import ProgressBar
 from contextlib import closing
+from getsub.progress_bar import ProgressBar
 
 
 ''' SubHD 字幕下载器
