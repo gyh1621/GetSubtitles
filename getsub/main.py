@@ -131,6 +131,7 @@ class GetSubtitles(object):
             if one_sub[-1] == '/':  # 压缩包内文件夹，跳过
                 continue
 
+            one_sub = os.path.split(one_sub)[-1]  # 提取文件名
             sub_name_info = guessit(one_sub)
             sub_title = sub_name_info['title'].lower() if sub_name_info.get('title') else ''
             sub_season = str(sub_name_info.get('season'))
@@ -147,11 +148,12 @@ class GetSubtitles(object):
                 continue  # 名字剧集都不匹配
 
             if '简体' in one_sub or 'chs' in one_sub or '.gb.' in one_sub:
-                score[-1] += 3
+                score[-1] += 5
             if '繁体' in one_sub or 'cht' in one_sub or '.big5.' in one_sub:
                 score[-1] += 3
-            if '中英' in one_sub or '双语' in one_sub or 'chs&eng' in one_sub:
-                score[-1] += 4
+            if '中英' in one_sub or '简英' in one_sub or '双语' in one_sub \
+                    or 'chs&eng' in one_sub or '简体&英文' in one_sub:
+                score[-1] += 7
 
             score[-1] += ('ass' in one_sub or 'ssa' in one_sub) * 2
             score[-1] += ('srt' in one_sub) * 1
@@ -160,6 +162,7 @@ class GetSubtitles(object):
         if max_score == 0 and not self.query:
             return None
         max_pos = score.index(max_score)
+
         return sublist[max_pos]
 
     def get_file_list(self, file_handler):
