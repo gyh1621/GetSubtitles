@@ -10,8 +10,8 @@ from io import BytesIO
 from collections import OrderedDict as order_dict
 from traceback import format_exc
 from requests import exceptions
-from getsub.__init__ import __version__
-from getsub.subhd import SubHDDownloader
+from __init__ import __version__
+from subhd import SubHDDownloader
 
 
 class GetSubtitles(object):

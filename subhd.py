@@ -6,7 +6,7 @@ import re
 from collections import OrderedDict as order_dict
 from bs4 import BeautifulSoup
 from contextlib import closing
-from getsub.progress_bar import ProgressBar
+from progress_bar import ProgressBar
 
 
 ''' SubHD 字幕下载器
@@ -49,7 +49,7 @@ class SubHDDownloader(object):
                     a = one_box.find('div', {'class': 'd_title'}).find('a')
                     sub_url = self.site_url + a.attrs['href']
                     sub_name = a.text
-                    if '/ar/' in a.attrs['href']:
+                    if '/ar0/' in a.attrs['href']:
                         type_score = 0
                         type_score += ('英文' in one_box.text) * 1
                         type_score += ('繁体' in one_box.text) * 2
@@ -66,7 +66,7 @@ class SubHDDownloader(object):
                 continue
 
             break
-
+        
         if list(sub_dict.items())[0][1]['lan'] < 8:  # 第一个候选字幕没有双语
             sub_dict = order_dict(sorted(sub_dict.items(), key=lambda e: e[1]['lan'], reverse=True))
         return sub_dict
