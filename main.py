@@ -12,6 +12,7 @@ from traceback import format_exc
 from requests import exceptions
 from __init__ import __version__
 from subhd import SubHDDownloader
+from zimuzu import ZimuzuDownloader
 
 
 class GetSubtitles(object):
@@ -30,6 +31,7 @@ class GetSubtitles(object):
         self.s_error = ''
         self.f_error = ''
         self.subhd = SubHDDownloader()
+        self.zimuzu = ZimuzuDownloader()
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
 
     def get_path_name(self, args):
@@ -249,7 +251,7 @@ class GetSubtitles(object):
                 continue
             try:
                 keywords, info_dict = self.sort_keyword(one_video)
-                sub_dict = self.subhd.get_subtitles(keywords, sub_num=self.sub_num)
+                sub_dict = self.zimuzu.get_subtitles(keywords, sub_num=self.sub_num)
                 if len(sub_dict) == 0:
                     self.s_error += 'no search results'
                     continue
@@ -259,7 +261,7 @@ class GetSubtitles(object):
                     sub_choice = self.choose_subtitle(sub_dict)
                     if self.query:
                         print('├ ')
-                    datatype, sub_data_bytes = self.subhd.download_file(sub_choice, sub_dict[sub_choice]['link'])
+                    datatype, sub_data_bytes = self.zimuzu.download_file(sub_choice, sub_dict[sub_choice]['link'])
 
                     if datatype in self.support_file_list:
                         # 获得猜测字幕名称，查询模式必有返回值，自动模式无猜测值返回None
