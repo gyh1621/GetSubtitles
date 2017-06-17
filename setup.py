@@ -4,8 +4,8 @@ from __init__ import __version__
 
 setup(
     author="gyh1621",
-    author_email="cngyh96@gmail.com",
-    description="download subtitles from subhd.com",
+    author_email="guoyh01@gmail.com",
+    description="download subtitles easily",
     license="MIT",
     name='getsub',
     version=__version__,

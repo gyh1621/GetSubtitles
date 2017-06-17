@@ -334,7 +334,7 @@ class GetSubtitles(object):
 def main():
 
     arg_parser = argparse.ArgumentParser(prog='GetSubtitles', epilog='getsub %s \n\n@guoyuhang' % __version__,
-                                         description='download subtitles from subhd.com',
+                                         description='download subtitles easily',
                                          formatter_class=argparse.RawTextHelpFormatter)
     arg_parser.add_argument('name', help="the video's name or full path "
                                          "or a dir with videos")
