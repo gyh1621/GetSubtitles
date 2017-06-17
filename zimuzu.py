@@ -23,8 +23,9 @@ class ZimuzuDownloader(object):
 
     def get_subtitles(self, keywords, sub_num=5):
 
-        print('├ Searching...', end='\r')
+        print('├ Searching ZIMUZU...', end='\r')
 
+        keywords = list(keywords)
         keyword = ''
         for one in keywords:
             keyword += (one + ' ')
@@ -37,7 +38,7 @@ class ZimuzuDownloader(object):
             bs_obj = BeautifulSoup(r.text, 'html.parser')
             if '字幕(0)' not in bs_obj.find('div', {'class': 'article-tab'}).text:
                 for one_box in bs_obj.find_all('div', {'class': 'search-item'}):
-                    sub_name = one_box.find('p').find('font').text
+                    sub_name = '[ZMZ]' + one_box.find('p').find('font').text
                     a = one_box.find('a')
                     sub_url = self.site_url + a.attrs['href']
                     lan_info = a.text

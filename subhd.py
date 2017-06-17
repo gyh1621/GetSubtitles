@@ -32,8 +32,9 @@ class SubHDDownloader(object):
                 字幕字典{'字幕名'：{'lan':'字幕包含语言值', 'link': '字幕链接'}}，按语言值降序排列
                 字幕包含语言值：英文加1， 繁体加2， 简体加4， 双语加8 """
 
-        print('├ Searching...', end='\r')
+        print('├ Searching SUBHD...', end='\r')
 
+        keywords = list(keywords)
         keyword = ''
         for one in keywords:
             keyword += (one + ' ')
@@ -48,8 +49,8 @@ class SubHDDownloader(object):
                 for one_box in bs_obj.find_all('div', {'class': 'box'}):
                     a = one_box.find('div', {'class': 'd_title'}).find('a')
                     sub_url = self.site_url + a.attrs['href']
-                    sub_name = a.text
-                    if '/ar0/' in a.attrs['href']:
+                    sub_name = '[SUBHD]' + a.text
+                    if '/ar1/' in a.attrs['href']:
                         type_score = 0
                         type_score += ('英文' in one_box.text) * 1
                         type_score += ('繁体' in one_box.text) * 2
@@ -66,8 +67,8 @@ class SubHDDownloader(object):
                 continue
 
             break
-        
-        if list(sub_dict.items())[0][1]['lan'] < 8:  # 第一个候选字幕没有双语
+
+        if len(sub_dict.items()) > 0 and list(sub_dict.items())[0][1]['lan'] < 8:  # 第一个候选字幕没有双语
             sub_dict = order_dict(sorted(sub_dict.items(), key=lambda e: e[1]['lan'], reverse=True))
         return sub_dict
 

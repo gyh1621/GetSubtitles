@@ -17,7 +17,7 @@ from zimuzu import ZimuzuDownloader
 
 class GetSubtitles(object):
 
-    def __init__(self, name, query, more, over, debug, sub_num):
+    def __init__(self, name, query, more, over, debug, sub_num, downloader):
         self.video_format_list = ['.webm', '.mkv', '.flv', '.vob', '.ogv', '.ogg', '.drc', '.gif', '.gifv', '.mng',
                                   '.avi', '.mov', '.qt', '.wmv', '.yuv', '.rm', '.rmvb', '.asf', '.amv', '.mp4',
                                   '.m4p', '.m4v', 'mpg', '.mp2', '.mpeg', '.mpe', '.mpv', '.mpg', '.m2v', '.svi',
@@ -26,12 +26,23 @@ class GetSubtitles(object):
         self.support_file_list = ['.zip', '.rar']
         self.arg_name = name
         self.query, self.more, self.over = query, more, over
-        self.sub_num = sub_num
+        if not sub_num:
+            self.sub_num = 5
+        else:
+            self.sub_num = int(sub_num)
         self.debug = debug
         self.s_error = ''
         self.f_error = ''
         self.subhd = SubHDDownloader()
         self.zimuzu = ZimuzuDownloader()
+        if not downloader:
+            self.downloader = [self.zimuzu, self.subhd]
+        elif downloader == 'subhd':
+            self.downloader = [self.subhd]
+        elif downloader == 'zimuzu':
+            self.downloader = [self.zimuzu]
+        else:
+            print("no such downloader, please choose from 'subhd','zimuzu'")
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
 
     def get_path_name(self, args):
@@ -96,6 +107,8 @@ class GetSubtitles(object):
             return list(sub_dict.keys())[0]
 
         for i, key in enumerate(sub_dict.keys()):
+            if i == self.sub_num:
+                break
             lang_info = ''
             lang_info += '【简】' if 4 & sub_dict[key]['lan'] else '      '
             lang_info += '【繁】' if 2 & sub_dict[key]['lan'] else '      '
@@ -251,7 +264,11 @@ class GetSubtitles(object):
                 continue
             try:
                 keywords, info_dict = self.sort_keyword(one_video)
-                sub_dict = self.zimuzu.get_subtitles(keywords, sub_num=self.sub_num)
+                sub_dict = order_dict()
+                for downloader in self.downloader:
+                    sub_dict.update(downloader.get_subtitles(tuple(keywords), sub_num=self.sub_num))
+                    if len(sub_dict) >= self.sub_num:
+                        break
                 if len(sub_dict) == 0:
                     self.s_error += 'no search results'
                     continue
@@ -261,7 +278,10 @@ class GetSubtitles(object):
                     sub_choice = self.choose_subtitle(sub_dict)
                     if self.query:
                         print('├ ')
-                    datatype, sub_data_bytes = self.zimuzu.download_file(sub_choice, sub_dict[sub_choice]['link'])
+                    if '[ZMZ]' in sub_choice:
+                        datatype, sub_data_bytes = self.zimuzu.download_file(sub_choice, sub_dict[sub_choice]['link'])
+                    elif '[SUBHD]' in sub_choice:
+                        datatype, sub_data_bytes = self.subhd.download_file(sub_choice, sub_dict[sub_choice]['link'])
 
                     if datatype in self.support_file_list:
                         # 获得猜测字幕名称，查询模式必有返回值，自动模式无猜测值返回None
@@ -322,6 +342,8 @@ def main():
                             help='show search results and choose one to download')  # TODO
     arg_parser.add_argument('-o', '--over', action='store_true', help='replace the subtitle already exists')
     arg_parser.add_argument('-m', '--more', action='store_true', help='save original download file.')
+    arg_parser.add_argument('-n', '--number', action='store', help='set max number of subtitles to be choosen when in query mode')
+    arg_parser.add_argument('-d', '--downloader', action='store', help='choose downloader')
     arg_parser.add_argument('--debug', action='store_true', help='show more info of the error')
 
     args = arg_parser.parse_args()
@@ -329,7 +351,7 @@ def main():
     if args.over:
         print('\nThe script will replace the old subtitles if exist...\n')
 
-    GetSubtitles(args.name, args.query, args.more, args.over, args.debug, sub_num=5).start()
+    GetSubtitles(args.name, args.query, args.more, args.over, args.debug, sub_num=args.number, downloader=args.downloader).start()
 
 if __name__ == '__main__':
     main()
