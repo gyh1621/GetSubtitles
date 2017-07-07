@@ -1,6 +1,12 @@
 # coding: utf-8
 # !/usr/bin/env python3
 
+from __future__ import print_function
+import sys
+if sys.version_info[0] == 2:
+    py = 2
+else:
+    py = 3
 import requests
 import re
 from collections import OrderedDict as order_dict
@@ -45,17 +51,24 @@ class SubHDDownloader(object):
             # 当前关键字查询
             r = s.get(self.search_url + keyword, headers=self.headers)
             bs_obj = BeautifulSoup(r.text, 'html.parser')
-            if '总共 0 条' not in bs_obj.find('small').text:
+            if py == 2:
+                small_text = bs_obj.find('small').text.encode('uft8')
+            else:
+                small_text = bs_obj.find('small').text
+            if '总共 0 条' not in small_text:
                 for one_box in bs_obj.find_all('div', {'class': 'box'}):
                     a = one_box.find('div', {'class': 'd_title'}).find('a')
                     sub_url = self.site_url + a.attrs['href']
-                    sub_name = '[SUBHD]' + a.text
+                    sub_name = '[SUBHD]' + a.text.encode('utf8') if py == 2 \
+                               else '[SUBHD]' + a.text
+                    text = one_box.text.encode('utf8') if py == 2 \
+                           else one_box.text
                     if '/ar1/' in a.attrs['href']:
                         type_score = 0
-                        type_score += ('英文' in one_box.text) * 1
-                        type_score += ('繁体' in one_box.text) * 2
-                        type_score += ('简体' in one_box.text) * 4
-                        type_score += ('双语' in one_box.text) * 8
+                        type_score += ('英文' in text) * 1
+                        type_score += ('繁体' in text) * 2
+                        type_score += ('简体' in text) * 4
+                        type_score += ('双语' in text) * 8
                         sub_dict[sub_name] = {'lan': type_score, 'link': sub_url}
                     if len(sub_dict) >= sub_num:
                         del keywords[:]  # 字幕条数达到上限，清空keywords
@@ -78,14 +91,7 @@ class SubHDDownloader(object):
 
         sid = sub_url.split('/')[-1]
 
-        while True:
-            r = requests.post('http://subhd.com/ajax/down_ajax', data={'sub_id': sid}, headers=self.headers)
-            message = r.content.decode('unicode-escape')
-            if '下载频率过高，请等候一分钟' in message:
-                bar = ProgressBar('├ 下载频率过高，请等候一分钟', count_time=60)
-                bar.count_down()
-            else:
-                break
+        r = requests.post('http://subhd.com/ajax/down_ajax', data={'sub_id': sid}, headers=self.headers)
 
         download_link = re.search('http:.*(?=")', r.content.decode('unicode-escape')).group(0).replace('\\/', '/')
         try:

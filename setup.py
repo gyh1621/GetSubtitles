@@ -11,10 +11,11 @@ setup(
     version=__version__,
     packages=[''],
     install_requires=[    # 依赖列表
-        'requests>=2.9, <2.10',
+        'requests>=2.0',
         'bs4>=0.0.1',
-        'guessit>=2.1, <2.2',
-        'rarfile>=3.0'
+        'guessit>=2.1',
+        'rarfile>=3.0',
+        'backports.shutil-get-terminal-size>=1.0'
     ],
     entry_points={
         'console_scripts': [

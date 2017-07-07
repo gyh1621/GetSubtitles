@@ -1,5 +1,11 @@
 # coding: utf-8
-# !/usr/bin/env python3
+
+from __future__ import print_function
+import sys
+if sys.version_info[0] == 2:
+    py = 2
+else:
+    py = 3
 
 import os
 import zipfile
@@ -141,6 +147,7 @@ class GetSubtitles(object):
         score = []
         for one_sub in sublist:
             one_sub = one_sub.lower()
+            one_sub = one_sub.encode('utf8') if py == 2 else one_sub
             score.append(0)  # 字幕起始分数
 
             if one_sub[-1] == '/':  # 压缩包内文件夹，跳过
@@ -245,6 +252,7 @@ class GetSubtitles(object):
                 f.write(sub_data_bytes)
             print('├ save original file.')
 
+        sub_name = sub_name.encode('utf8') if py == 2 else sub_name
         return sub_name
 
     def start(self):

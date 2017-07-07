@@ -1,7 +1,13 @@
 # coding: utf-8
-# !/usr/bin/env python3
 
-from shutil import get_terminal_size
+from __future__ import print_function
+from __future__ import division
+import sys
+if sys.version_info[0] == 2:
+    from backports.shutil_get_terminal_size.get_terminal_size \
+         import get_terminal_size
+else:
+    from shutil import get_terminal_size
 from time import sleep
 
 
@@ -16,12 +22,10 @@ class ProgressBar(object):
     def refresh(self, cur_len):
         terminal_width = get_terminal_size().columns  # 获取终端宽度
         info = "%s '%s'...  %.2f%%" % (self.prefix_info, self.title, cur_len/self.total * 100)
-        while len(info) > terminal_width - 30:
+        while len(info) > terminal_width - 20:
             self.title = self.title[0:-4] + '...'
             info = "%s '%s'...  %.2f%%" % (self.prefix_info, self.title, cur_len/self.total * 100)
         end_str = '\r' if cur_len < self.total else '\n'
-        if end_str == '\r':
-            print(' ' * (terminal_width - 5), end=end_str)
         print(info, end=end_str)
 
     def count_down(self):
