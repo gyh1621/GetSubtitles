@@ -7,6 +7,7 @@ if sys.version_info[0] == 2:
     py = 2
 else:
     py = 3
+import json
 import requests
 import re
 from collections import OrderedDict as order_dict
@@ -93,6 +94,9 @@ class SubHDDownloader(object):
 
         r = requests.post('http://subhd.com/ajax/down_ajax', data={'sub_id': sid}, headers=self.headers)
 
+        content = r.content.decode('unicode-escape')
+        if json.loads(content)['success'] == False:
+            return None, None, 'false'
         download_link = re.search('http:.*(?=")', r.content.decode('unicode-escape')).group(0).replace('\\/', '/')
         try:
             with closing(requests.get(download_link, stream=True)) as response:
@@ -105,7 +109,7 @@ class SubHDDownloader(object):
                     bar.refresh(len(sub_data_bytes))
             # sub_data_bytes = requests.get(download_link, timeout=10).content
         except requests.Timeout:
-            return None, None
+            return None, None, 'false'
         if 'rar' in download_link:
             datatype = '.rar'
         elif 'zip' in download_link:
@@ -115,4 +119,4 @@ class SubHDDownloader(object):
         else:
             datatype = 'Unknown'
 
-        return datatype, sub_data_bytes
+        return datatype, sub_data_bytes, 'success'

@@ -16,6 +16,7 @@ from io import BytesIO
 from collections import OrderedDict as order_dict
 from traceback import format_exc
 from requests import exceptions
+from requests import get
 from __init__ import __version__
 from subhd import SubHDDownloader
 from zimuzu import ZimuzuDownloader
@@ -289,7 +290,10 @@ class GetSubtitles(object):
                     if '[ZMZ]' in sub_choice:
                         datatype, sub_data_bytes = self.zimuzu.download_file(sub_choice, sub_dict[sub_choice]['link'])
                     elif '[SUBHD]' in sub_choice:
-                        datatype, sub_data_bytes = self.subhd.download_file(sub_choice, sub_dict[sub_choice]['link'])
+                        datatype, sub_data_bytes, msg = self.subhd.download_file(sub_choice, sub_dict[sub_choice]['link'])
+                        if msg == 'false':
+                            print('download too frequently with subhd downloader, please change to other downloaders')
+                            return
 
                     if datatype in self.support_file_list:
                         # 获得猜测字幕名称，查询模式必有返回值，自动模式无猜测值返回None
@@ -338,6 +342,15 @@ class GetSubtitles(object):
             len(self.failed_list)
         ))
 
+def test_network():
+    url = 'baidu.com'
+    try:
+        a = get('http://baidu.com')
+    except exceptions.ConnectionError:
+        return 0
+    except:
+        return -1
+    return 1
 
 def main():
 
@@ -358,6 +371,13 @@ def main():
 
     if args.over:
         print('\nThe script will replace the old subtitles if exist...\n')
+
+    if test_network() == 0:
+        print('check your network connection')
+        return
+    elif test_network() == -1:
+        print('unknown error, add --debug to show detailed infomation')
+        return
 
     GetSubtitles(args.name, args.query, args.more, args.over, args.debug, sub_num=args.number, downloader=args.downloader).start()
 
