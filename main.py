@@ -2,33 +2,39 @@
 
 from __future__ import print_function
 import sys
+import os
+import zipfile
+import rarfile
+import argparse
+from io import BytesIO
+from collections import OrderedDict as order_dict
+from traceback import format_exc
+
+from guessit import guessit
+from requests import exceptions
+from requests import get
+
+from __init__ import __version__
+from subhd import SubHDDownloader
+from zimuzu import ZimuzuDownloader
+
 if sys.version_info[0] == 2:
     py = 2
 else:
     py = 3
 
-import os
-import zipfile
-import rarfile
-import argparse
-from guessit import guessit
-from io import BytesIO
-from collections import OrderedDict as order_dict
-from traceback import format_exc
-from requests import exceptions
-from requests import get
-from __init__ import __version__
-from subhd import SubHDDownloader
-from zimuzu import ZimuzuDownloader
-
 
 class GetSubtitles(object):
 
     def __init__(self, name, query, more, over, debug, sub_num, downloader):
-        self.video_format_list = ['.webm', '.mkv', '.flv', '.vob', '.ogv', '.ogg', '.drc', '.gif', '.gifv', '.mng',
-                                  '.avi', '.mov', '.qt', '.wmv', '.yuv', '.rm', '.rmvb', '.asf', '.amv', '.mp4',
-                                  '.m4p', '.m4v', 'mpg', '.mp2', '.mpeg', '.mpe', '.mpv', '.mpg', '.m2v', '.svi',
-                                  '.3gp', '.3g2', '.mxf', '.roq', '.nsv', '.flv', '.f4v', '.f4p', '.f4a', '.f4b']
+        self.video_format_list = ['.webm', '.mkv', '.flv', '.vob', '.ogv',
+                                  '.ogg', '.drc', '.gif', '.gifv', '.mng',
+                                  '.avi', '.mov', '.qt', '.wmv', '.yuv',
+                                  '.rm', '.rmvb', '.asf', '.amv', '.mp4',
+                                  '.m4p', '.m4v', 'mpg', '.mp2', '.mpeg',
+                                  '.mpe', '.mpv', '.mpg', '.m2v', '.svi',
+                                  '.3gp', '.3g2', '.mxf', '.roq', '.nsv',
+                                  '.flv', '.f4v', '.f4p', '.f4a', '.f4b']
         self.sub_format_list = ['.ass', '.srt', '.ssa', '.sub']
         self.support_file_list = ['.zip', '.rar']
         self.arg_name = name
@@ -54,36 +60,56 @@ class GetSubtitles(object):
 
     def get_path_name(self, args):
 
-        """ 传入输入的视频名称或路径，构造一个包含视频路径和是否存在字幕信息的字典返回。
-                    video_dict: {'path': path, 'have_subtitle': sub_exists} """
+        """ 传入输入的视频名称或路径,
+            构造一个包含视频路径和是否存在字幕信息的字典返回。
+            video_dict: {'path': path, 'have_subtitle': sub_exists} """
 
         mix_str = args.replace('"', '')
         video_dict = order_dict()
         if os.path.isdir(mix_str):  # 一个文件夹
             for root, dirs, files in os.walk(mix_str):
                 for one_name in files:
-                    if os.path.splitext(one_name)[1] not in self.video_format_list:  # 检查后缀是否为视频格式
+                    suffix = os.path.splitext(one_name)[1]
+                    # 检查后缀是否为视频格式
+                    if suffix not in self.video_format_list:
                         continue
                     v_name_no_format = os.path.splitext(one_name)[0]
                     sub_exists = max(
-                        list(map(lambda sub_type: int(v_name_no_format + sub_type in files), self.sub_format_list))
+                        list(
+                            map(
+                                lambda sub_type:
+                                    int(v_name_no_format + sub_type in files),
+                                    self.sub_format_list
+                            )
+                        )
                     )
-                    video_dict[one_name] = {'path': root, 'have_subtitle': sub_exists}
+                    video_dict[one_name] = {'path': root,
+                                            'have_subtitle': sub_exists}
 
         elif os.path.isabs(mix_str):  # 视频绝对路径
             v_path, v_name = os.path.split(mix_str)
             v_name_no_format = os.path.splitext(v_name)[0]
-            sub_exists = max(list(map(
-                lambda sub_type: os.path.exists(os.path.join(v_path, v_name_no_format + sub_type)), self.sub_format_list
-            )))
-            video_dict[v_name] = {'path': os.path.dirname(mix_str), 'have_subtitle': sub_exists}
+            sub_exists = max(
+                list(
+                    map(
+                        lambda sub_type:
+                            os.path.exists(
+                                os.path.join(v_path, v_name_no_format+sub_type)
+                            ),
+                            self.sub_format_list
+                    )
+                )
+            )
+            video_dict[v_name] = {'path': os.path.dirname(mix_str),
+                                  'have_subtitle': sub_exists}
         else:  # 单个视频名字，无路径
             video_dict[mix_str] = {'path': os.getcwd(), 'have_subtitle': 0}
         return video_dict
 
     def sort_keyword(self, name):
 
-        """ 解析视频名， 返回将各个关键字按重要度降序排列的列表，原始视频信息 """
+        """ 解析视频名
+            返回将各个关键字按重要度降序排列的列表，原始视频信息 """
 
         name = name.replace('[', '')
         name = name.replace(']', '')
@@ -108,7 +134,9 @@ class GetSubtitles(object):
 
     def choose_subtitle(self, sub_dict):
 
-        """ 传入候选字幕字典，若为查询模式返回选择的字幕包名称， 否则返回字幕字典第一个字幕包的名称 """
+        """ 传入候选字幕字典
+            若为查询模式返回选择的字幕包名称
+            否则返回字幕字典第一个字幕包的名称 """
 
         if not self.query:
             return list(sub_dict.keys())[0]
@@ -156,7 +184,10 @@ class GetSubtitles(object):
 
             one_sub = os.path.split(one_sub)[-1]  # 提取文件名
             sub_name_info = guessit(one_sub)
-            sub_title = sub_name_info['title'].lower() if sub_name_info.get('title') else ''
+            if sub_name_info.get('title'):
+                sub_title = sub_name_info['title'].lower()
+            else:
+                sub_title = ''
             sub_season = str(sub_name_info.get('season'))
             sub_episode = str(sub_name_info.get('episode'))
             if video_name == sub_title:
@@ -213,12 +244,12 @@ class GetSubtitles(object):
 
         return sub_lists_dict
 
-    def extract_subtitle(self, v_name, v_path, datatype, sub_data_bytes, v_info_dict):
+    def extract_subtitle(self, v_name, v_path, datatype, sub_data_b, v_info_d):
 
         """ 接受下载好的字幕包字节数据， 猜测字幕并解压。 """
 
         sub_buff = BytesIO()
-        sub_buff.write(sub_data_bytes)
+        sub_buff.write(sub_data_b)
 
         if datatype == '.zip':
             file_handler = zipfile.ZipFile(sub_buff, mode='r')
@@ -230,7 +261,7 @@ class GetSubtitles(object):
 
         # sub_lists = [x for x in file_handler.namelist() if x[-1] != '/']
 
-        sub_name = self.guess_subtitle(list(sub_lists_dict.keys()), v_info_dict)
+        sub_name = self.guess_subtitle(list(sub_lists_dict.keys()), v_info_d)
 
         if not sub_name:  # 自动模式下无最佳猜测
             return None
@@ -238,7 +269,8 @@ class GetSubtitles(object):
         os.chdir(v_path)  # 切换到视频所在文件夹
 
         v_name_without_format = os.path.splitext(v_name)[0]
-        sub_new_name = v_name_without_format + os.path.splitext(sub_name)[1]  # video_name + sub_type
+        # video_name + sub_type
+        sub_new_name = v_name_without_format + os.path.splitext(sub_name)[1]
 
         for one_sub_type in self.sub_format_list:  # 删除若已经存在的字幕
             if os.path.exists(v_name_without_format + one_sub_type):
@@ -250,7 +282,7 @@ class GetSubtitles(object):
 
         if self.more:  # 保存原字幕压缩包
             with open(v_name_without_format + datatype, 'wb') as f:
-                f.write(sub_data_bytes)
+                f.write(sub_data_b)
             print('├ save original file.')
 
         sub_name = sub_name.encode('utf8') if py == 2 else sub_name
@@ -275,7 +307,10 @@ class GetSubtitles(object):
                 keywords, info_dict = self.sort_keyword(one_video)
                 sub_dict = order_dict()
                 for downloader in self.downloader:
-                    sub_dict.update(downloader.get_subtitles(tuple(keywords), sub_num=self.sub_num))
+                    sub_dict.update(
+                        downloader.get_subtitles(
+                                tuple(keywords), sub_num=self.sub_num)
+                    )
                     if len(sub_dict) >= self.sub_num:
                         break
                 if len(sub_dict) == 0:
@@ -283,22 +318,32 @@ class GetSubtitles(object):
                     continue
 
                 extract_sub_name = None
-                while not extract_sub_name and len(sub_dict) > 0:  # 遍历字幕包直到有猜测字幕
+                # 遍历字幕包直到有猜测字幕
+                while not extract_sub_name and len(sub_dict) > 0:
                     sub_choice = self.choose_subtitle(sub_dict)
                     if self.query:
                         print('├ ')
                     if '[ZMZ]' in sub_choice:
-                        datatype, sub_data_bytes = self.zimuzu.download_file(sub_choice, sub_dict[sub_choice]['link'])
+                        datatype, sub_data_bytes = self.zimuzu.download_file(
+                                    sub_choice, sub_dict[sub_choice]['link']
+                        )
                     elif '[SUBHD]' in sub_choice:
-                        datatype, sub_data_bytes, msg = self.subhd.download_file(sub_choice, sub_dict[sub_choice]['link'])
+                        datatype, sub_data_bytes, msg = self.subhd.\
+                                download_file(sub_choice,
+                                              sub_dict[sub_choice]['link'])
                         if msg == 'false':
-                            print('download too frequently with subhd downloader, please change to other downloaders')
+                            print('download too frequently \
+                                  with subhd downloader, \
+                                  please change to other downloaders')
                             return
 
                     if datatype in self.support_file_list:
-                        # 获得猜测字幕名称，查询模式必有返回值，自动模式无猜测值返回None
-                        extract_sub_name = self.extract_subtitle(one_video, video_info['path'],
-                                                            datatype, sub_data_bytes, info_dict)
+                        # 获得猜测字幕名称
+                        # 查询模式必有返回值，自动模式无猜测值返回None
+                        extract_sub_name = self.extract_subtitle(
+                                one_video, video_info['path'], datatype,
+                                sub_data_bytes, info_dict
+                                )
                         if extract_sub_name:
                             print('├ ' + extract_sub_name + '\n')
                     elif self.query:  # 查询模式下下载字幕包为不支持类型
@@ -315,20 +360,26 @@ class GetSubtitles(object):
                 self.s_error += str(e) + '. '
                 self.f_error += format_exc()
             finally:
-                if 'extract_sub_name' in dir() and not extract_sub_name and len(sub_dict) == 0:
+                if ('extract_sub_name' in dir()
+                        and not extract_sub_name
+                        and len(sub_dict) == 0):
                     # 自动模式下所有字幕包均没有猜测字幕
-                    self.s_error += " failed to guess one subtitle, use '-q' to try query mode."
+                    self.s_error += " failed to guess one subtitle,"
+                    self.s_error += "use '-q' to try query mode."
 
                 if self.s_error and not self.debug:
                     self.s_error += "add --debug to get more info of the error"
 
                 if self.s_error:
-                    self.failed_list.append({'name': one_video, 'path': video_info['path'],
-                                             'error': self.s_error, 'trace_back': self.f_error})
+                    self.failed_list.append({'name': one_video,
+                                             'path': video_info['path'],
+                                             'error': self.s_error,
+                                             'trace_back': self.f_error})
                     print('├ error:' + self.s_error)
 
         if len(self.failed_list):
-            print('\n===============================FAILED LIST===============================\n')
+            print('\n===============================', end='')
+            print('FAILED LIST===============================\n')
             for i, one in enumerate(self.failed_list):
                 print('%2s. name: %s' % (i + 1, one['name']))
                 print('%3s path: %s' % ('', one['path']))
@@ -342,30 +393,64 @@ class GetSubtitles(object):
             len(self.failed_list)
         ))
 
+
 def test_network():
-    url = 'baidu.com'
     try:
-        a = get('http://baidu.com')
+        get('http://baidu.com')
     except exceptions.ConnectionError:
         return 0
     except:
         return -1
     return 1
 
+
 def main():
 
-    arg_parser = argparse.ArgumentParser(prog='GetSubtitles', epilog='getsub %s \n\n@guoyuhang' % __version__,
-                                         description='download subtitles easily',
-                                         formatter_class=argparse.RawTextHelpFormatter)
-    arg_parser.add_argument('name', help="the video's name or full path "
-                                         "or a dir with videos")
-    arg_parser.add_argument('-q', '--query', action='store_true',
-                            help='show search results and choose one to download')  # TODO
-    arg_parser.add_argument('-o', '--over', action='store_true', help='replace the subtitle already exists')
-    arg_parser.add_argument('-m', '--more', action='store_true', help='save original download file.')
-    arg_parser.add_argument('-n', '--number', action='store', help='set max number of subtitles to be choosen when in query mode')
-    arg_parser.add_argument('-d', '--downloader', action='store', help='choose downloader')
-    arg_parser.add_argument('--debug', action='store_true', help='show more info of the error')
+    arg_parser = argparse.ArgumentParser(
+        prog='GetSubtitles',
+        epilog='getsub %s \n\n@guoyuhang' % __version__,
+        description='download subtitles easily',
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    arg_parser.add_argument(
+        'name',
+        help="the video's name or full path or a dir with videos"
+    )
+    arg_parser.add_argument(
+        '-q',
+        '--query',
+        action='store_true',
+        help='show search results and choose one to download'
+    )
+    arg_parser.add_argument(
+        '-o',
+        '--over',
+        action='store_true',
+        help='replace the subtitle already exists'
+    )
+    arg_parser.add_argument(
+        '-m',
+        '--more',
+        action='store_true',
+        help='save original download file.'
+    )
+    arg_parser.add_argument(
+        '-n',
+        '--number',
+        action='store',
+        help='set max number of subtitles to be choosen when in query mode'
+    )
+    arg_parser.add_argument(
+        '-d',
+        '--downloader',
+        action='store',
+        help='choose downloader'
+    )
+    arg_parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='show more info of the error'
+    )
 
     args = arg_parser.parse_args()
 
@@ -379,7 +464,10 @@ def main():
         print('unknown error, add --debug to show detailed infomation')
         return
 
-    GetSubtitles(args.name, args.query, args.more, args.over, args.debug, sub_num=args.number, downloader=args.downloader).start()
+    GetSubtitles(args.name, args.query, args.more,
+                 args.over, args.debug, sub_num=args.number,
+                 downloader=args.downloader).start()
+
 
 if __name__ == '__main__':
     main()
