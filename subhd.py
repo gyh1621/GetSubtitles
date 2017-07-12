@@ -2,7 +2,6 @@
 # !/usr/bin/env python3
 
 from __future__ import print_function
-import sys
 import json
 import re
 from contextlib import closing
@@ -11,12 +10,8 @@ from collections import OrderedDict as order_dict
 import requests
 from bs4 import BeautifulSoup
 
+from sys_global_var import py, prefix
 from progress_bar import ProgressBar
-
-if sys.version_info[0] == 2:
-    py = 2
-else:
-    py = 3
 
 
 ''' SubHD 字幕下载器
@@ -48,7 +43,7 @@ class SubHDDownloader(object):
                          按语言值降序排列
                 字幕包含语言值：英文加1， 繁体加2， 简体加4， 双语加8 """
 
-        print('├ Searching SUBHD...', end='\r')
+        print(prefix + ' Searching SUBHD...', end='\r')
 
         keywords = list(keywords)
         keyword = ''
@@ -62,7 +57,7 @@ class SubHDDownloader(object):
             r = s.get(self.search_url + keyword, headers=self.headers)
             bs_obj = BeautifulSoup(r.text, 'html.parser')
             if py == 2:
-                small_text = bs_obj.find('small').text.encode('uft8')
+                small_text = bs_obj.find('small').text.encode('utf8')
             else:
                 small_text = bs_obj.find('small').text
             if '总共 0 条' not in small_text:
@@ -123,7 +118,8 @@ class SubHDDownloader(object):
                 chunk_size = 1024  # 单次请求最大值
                 # 内容体总大小
                 content_size = int(response.headers['content-length'])
-                bar = ProgressBar('├ Get', file_name.strip(), content_size)
+                bar = ProgressBar(prefix + ' Get',
+                                  file_name.strip(), content_size)
                 sub_data_bytes = b''
                 for data in response.iter_content(chunk_size=chunk_size):
                     sub_data_bytes += data

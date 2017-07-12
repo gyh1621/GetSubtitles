@@ -2,10 +2,11 @@
 
 from __future__ import print_function
 from __future__ import division
-import sys
 from time import sleep
 
-if sys.version_info[0] == 2:
+from sys_global_var import py
+
+if py == 2:
     from backports.shutil_get_terminal_size.get_terminal_size \
          import get_terminal_size
 else:

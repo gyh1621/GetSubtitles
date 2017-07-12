@@ -1,19 +1,15 @@
 # coding: utf-8
 
 from __future__ import print_function
-import sys
 from collections import OrderedDict as order_dict
 from contextlib import closing
 
 import requests
 from bs4 import BeautifulSoup
 
+from sys_global_var import py, prefix
 from progress_bar import ProgressBar
 
-if sys.version_info[0] == 2:
-    py = 2
-else:
-    py = 3
 
 ''' Zimuzu 字幕下载器
 '''
@@ -34,7 +30,7 @@ class ZimuzuDownloader(object):
 
     def get_subtitles(self, keywords, sub_num=5):
 
-        print('├ Searching ZIMUZU...', end='\r')
+        print(prefix + ' Searching ZIMUZU...', end='\r')
 
         keywords = list(keywords)
         keyword = ''
@@ -99,7 +95,8 @@ class ZimuzuDownloader(object):
                 chunk_size = 1024  # 单次请求最大值
                 # 内容体总大小
                 content_size = int(response.headers['content-length'])
-                bar = ProgressBar('├ Get', file_name.strip(), content_size)
+                bar = ProgressBar(prefix + ' Get',
+                                  file_name.strip(), content_size)
                 sub_data_bytes = b''
                 for data in response.iter_content(chunk_size=chunk_size):
                     sub_data_bytes += data
