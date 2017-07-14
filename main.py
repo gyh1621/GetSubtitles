@@ -195,13 +195,18 @@ class GetSubtitles(object):
         score = []
         for one_sub in sublist:
             one_sub = one_sub.lower()
-            one_sub = one_sub.encode('utf8') if py == 2 else one_sub
             score.append(0)  # 字幕起始分数
 
             if one_sub[-1] == '/':  # 压缩包内文件夹，跳过
                 continue
 
             one_sub = os.path.split(one_sub)[-1]  # 提取文件名
+            try:
+                # zipfile:/Lib/zipfile.py:1211 Historical ZIP filename encoding
+                # try cp437 encoding
+                one_sub = one_sub.encode('cp437').decode('gbk')
+            except:
+                pass
             sub_name_info = guessit(one_sub)
             if sub_name_info.get('title'):
                 sub_title = sub_name_info['title'].lower()
@@ -304,13 +309,6 @@ class GetSubtitles(object):
                 f.write(sub_data_b)
             print(prefix + ' save original file.')
 
-        # sub_name type: py2 - unicode -> to encode
-        # sub_name type: py3 - str
-        if py == 2:
-            if is_gbk:
-                sub_name = sub_name.encode('gbk')
-            else:
-                sub_name = sub_name.encode('utf8')
         return sub_name
 
     def start(self):
@@ -371,6 +369,13 @@ class GetSubtitles(object):
                                 sub_data_bytes, info_dict
                                 )
                         if extract_sub_name:
+                            try:
+                                # zipfile: Historical ZIP filename encoding
+                                # try cp437 encoding
+                                extract_sub_name = extract_sub_name.\
+                                    encode('cp437').decode('gbk')
+                            except:
+                                pass
                             print(prefix + ' ' + extract_sub_name + '\n')
                     elif self.query:  # 查询模式下下载字幕包为不支持类型
                         print(prefix
