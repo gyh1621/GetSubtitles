@@ -225,13 +225,28 @@ class GetSubtitles(object):
                 score[-1] -= 2
                 continue  # 名字剧集都不匹配
 
-            if '简体' in one_sub or 'chs' in one_sub or '.gb.' in one_sub:
-                score[-1] += 5
-            if '繁体' in one_sub or 'cht' in one_sub or '.big5.' in one_sub:
-                score[-1] += 3
-            if '中英' in one_sub or '简英' in one_sub or '双语' in one_sub \
-                    or 'chs&eng' in one_sub or '简体&英文' in one_sub:
-                score[-1] += 7
+            try:
+                if '简体' in one_sub or 'chs' in one_sub or '.gb.' in one_sub:
+                    score[-1] += 5
+                if '繁体' in one_sub or 'cht' in one_sub or '.big5.' in one_sub:
+                    score[-1] += 3
+                if '中英' in one_sub or '简英' in one_sub or '双语' in one_sub \
+                        or 'chs&eng' in one_sub or '简体&英文' in one_sub:
+                    score[-1] += 7
+            # py2 strange decode error, happens time to time
+            except UnicodeDecodeError:
+                if '简体'.decode('utf8') in one_sub \
+                        or 'chs' in one_sub or '.gb.' in one_sub:
+                    score[-1] += 5
+                if '繁体'.decode('utf8') in one_sub \
+                        or 'cht' in one_sub or '.big5.' in one_sub:
+                    score[-1] += 3
+                if '中英'.decode('utf8') in one_sub \
+                        or '简英'.decode('utf8') in one_sub \
+                        or '双语'.decode('utf8') in one_sub \
+                        or '简体&英文'.decode('utf8') in one_sub \
+                        or 'chs&eng' in one_sub :
+                    score[-1] += 7
 
             score[-1] += ('ass' in one_sub or 'ssa' in one_sub) * 2
             score[-1] += ('srt' in one_sub) * 1
@@ -372,11 +387,16 @@ class GetSubtitles(object):
                             try:
                                 # zipfile: Historical ZIP filename encoding
                                 # try cp437 encoding
+                                pass
                                 extract_sub_name = extract_sub_name.\
                                     encode('cp437').decode('gbk')
                             except:
                                 pass
-                            print(prefix + ' ' + extract_sub_name + '\n')
+                            try:
+                                print(prefix + ' ' + extract_sub_name + '\n')
+                            except UnicodeDecodeError:
+                                print(prefix + ' '
+                                      + extract_sub_name.encode('gbk') + '\n')
                     elif self.query:  # 查询模式下下载字幕包为不支持类型
                         print(prefix
                               + '  unsupported file type %s' % datatype[1:])
