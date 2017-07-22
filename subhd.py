@@ -70,7 +70,7 @@ class SubHDDownloader(object):
                         text = one_box.text.encode('utf8')
                     else:
                         text = one_box.text
-                    if '/ar1/' in a.attrs['href']:
+                    if '/ar' in a.attrs['href']:
                         type_score = 0
                         type_score += ('英文' in text) * 1
                         type_score += ('繁体' in text) * 2
