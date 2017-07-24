@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import os
+import sys
 import zipfile
 import rarfile
 import argparse
@@ -14,7 +15,7 @@ from guessit import guessit
 from requests import exceptions
 from requests import get
 
-from sys_global_var import py, prefix, is_gbk
+from sys_global_var import py, prefix
 from __init__ import __version__
 from subhd import SubHDDownloader
 from zimuzu import ZimuzuDownloader
@@ -22,7 +23,13 @@ from zimuzu import ZimuzuDownloader
 
 class GetSubtitles(object):
 
-    def __init__(self, name, query, more, over, debug, sub_num, downloader):
+    if sys.stdout.encoding == 'cp936':
+        output_encode = 'gbk'
+    else:
+        output_encode = 'utf8'
+
+    def __init__(self, name, query, single,
+                 more, over, debug, sub_num, downloader):
         self.video_format_list = ['.webm', '.mkv', '.flv', '.vob', '.ogv',
                                   '.ogg', '.drc', '.gif', '.gifv', '.mng',
                                   '.avi', '.mov', '.qt', '.wmv', '.yuv',
@@ -34,7 +41,8 @@ class GetSubtitles(object):
         self.sub_format_list = ['.ass', '.srt', '.ssa', '.sub']
         self.support_file_list = ['.zip', '.rar']
         self.arg_name = name
-        self.query, self.more, self.over = query, more, over
+        self.query, self.single = query, single
+        self.more, self.over = more, over
         if not sub_num:
             self.sub_num = 5
         else:
@@ -137,13 +145,6 @@ class GetSubtitles(object):
         if not self.query:
             chosen_sub = list(sub_dict.keys())[0]
             link = sub_dict[chosen_sub]['link']
-            if py == 2:
-                encoding = chardet.detect(chosen_sub)['encoding']
-                chosen_sub = chosen_sub.decode(encoding)
-                if is_gbk:
-                    chosen_sub = chosen_sub.encode('gbk')
-                else:
-                    chosen_sub = chosen_sub.encode('utf8')
             return chosen_sub, link
 
         for i, key in enumerate(sub_dict.keys()):
@@ -155,8 +156,9 @@ class GetSubtitles(object):
             lang_info += '【英】' if 1 & sub_dict[key]['lan'] else '      '
             lang_info += '【双】' if 8 & sub_dict[key]['lan'] else '      '
             a_sub_info = ' %3s) %s  %s' % (i + 1, lang_info, key)
-            if py == 2 and is_gbk:
-                a_sub_info = a_sub_info.decode('utf8').encode('gbk')
+            if py == 2:
+                a_sub_info = a_sub_info.decode('utf8')
+                a_sub_info = a_sub_info.encode(GetSubtitles.output_encode)
             a_sub_info = prefix + a_sub_info
             print(a_sub_info)
 
@@ -174,13 +176,6 @@ class GetSubtitles(object):
                 choice = None
         chosen_sub = list(sub_dict.keys())[choice - 1]
         link = sub_dict[chosen_sub]['link']
-        if py == 2:
-            encoding = chardet.detect(chosen_sub)['encoding']
-            chosen_sub = chosen_sub.decode(encoding)
-            if is_gbk:
-                chosen_sub = chosen_sub.encode('gbk')
-            else:
-                chosen_sub = chosen_sub.encode('utf8')
         return chosen_sub, link
 
     def guess_subtitle(self, sublist, video_info):
@@ -245,7 +240,7 @@ class GetSubtitles(object):
                         or '简英'.decode('utf8') in one_sub \
                         or '双语'.decode('utf8') in one_sub \
                         or '简体&英文'.decode('utf8') in one_sub \
-                        or 'chs&eng' in one_sub :
+                        or 'chs&eng' in one_sub:
                     score[-1] += 7
 
             score[-1] += ('ass' in one_sub or 'ssa' in one_sub) * 2
@@ -283,7 +278,8 @@ class GetSubtitles(object):
 
         return sub_lists_dict
 
-    def extract_subtitle(self, v_name, v_path, datatype, sub_data_b, v_info_d):
+    def extract_subtitle(self, v_name, v_path, datatype,
+                         sub_data_b, v_info_d, single):
 
         """ 接受下载好的字幕包字节数据， 猜测字幕并解压。 """
 
@@ -300,7 +296,53 @@ class GetSubtitles(object):
 
         # sub_lists = [x for x in file_handler.namelist() if x[-1] != '/']
 
-        sub_name = self.guess_subtitle(list(sub_lists_dict.keys()), v_info_d)
+        if not single:
+            sub_name = self.guess_subtitle(
+                list(sub_lists_dict.keys()), v_info_d)
+        else:
+            print(prefix)
+            for i, single_subtitle in enumerate(sub_lists_dict.keys()):
+                single_subtitle = single_subtitle.split('/')[-1]
+                try:
+                    # zipfile: Historical ZIP filename encoding
+                    # try cp437 encoding
+                    single_subtitle = single_subtitle.\
+                        encode('cp437').decode('gbk')
+                except:
+                    pass
+                info = ' %3s)  %s' % (str(i+1), single_subtitle)
+                if py == 2:
+                    try:
+                        if isinstance(single_subtitle, str):
+                            encoding = chardet.detect(
+                                single_subtitle)['encoding']
+                            if 'ISO' in encoding:
+                                encoding = 'gbk'
+                            output = prefix + info.decode(encoding).\
+                                encode(GetSubtitles.output_encode)
+                            print(output)
+                        else:
+                            info = info.encode(GetSubtitles.output_encode)
+                            print(prefix + info)
+                    except:
+                        print(prefix +
+                              ' %3s)  %s' % (str(i+1), 'unknown file'))
+                else:
+                    print(prefix + info)
+
+            indexes = range(len(sub_lists_dict.keys()))
+            choice = None
+            while not choice:
+                try:
+                    print(prefix)
+                    choice = int(input(prefix + '  choose subtitle: '))
+                except ValueError:
+                    print(prefix + '  Error: only numbers accepted')
+                    continue
+                if not choice - 1 in indexes:
+                    print(prefix + '  Error: numbers not within the range')
+                    choice = None
+            sub_name = list(sub_lists_dict.keys())[choice - 1]
 
         if not sub_name:  # 自动模式下无最佳猜测
             return None
@@ -360,6 +402,22 @@ class GetSubtitles(object):
                 # 遍历字幕包直到有猜测字幕
                 while not extract_sub_name and len(sub_dict) > 0:
                     sub_choice, link = self.choose_subtitle(sub_dict)
+                    sub_dict.pop(sub_choice)
+                    if py == 2:
+                        encoding = chardet.detect(sub_choice)['encoding']
+                        if isinstance(sub_choice, str):
+                            sub_choice = sub_choice.decode(encoding)
+                        try:
+                            sub_choice = sub_choice.encode(
+                                GetSubtitles.output_encode
+                            )
+                        except:
+                            if isinstance(sub_choice, str):
+                                sub_choice = sub_choice.encode(encoding)
+                            sub_choice = sub_choice.decode('utf8')
+                            sub_choice = sub_choice.encode(
+                                GetSubtitles.output_encode
+                            )
                     if self.query:
                         print(prefix + ' ')
                     if '[ZMZ]' in sub_choice:
@@ -381,18 +439,32 @@ class GetSubtitles(object):
                         # 查询模式必有返回值，自动模式无猜测值返回None
                         extract_sub_name = self.extract_subtitle(
                                 one_video, video_info['path'], datatype,
-                                sub_data_bytes, info_dict
+                                sub_data_bytes, info_dict, self.single
                                 )
                         if extract_sub_name:
+                            extract_sub_name = extract_sub_name.split('/')[-1]
                             try:
                                 # zipfile: Historical ZIP filename encoding
                                 # try cp437 encoding
-                                pass
                                 extract_sub_name = extract_sub_name.\
                                     encode('cp437').decode('gbk')
                             except:
                                 pass
                             try:
+                                if py == 2:
+                                    if isinstance(extract_sub_name, str):
+                                        encoding = chardet.\
+                                                detect(extract_sub_name)
+                                        encoding = encoding['encoding']
+                                        if 'ISO' in encoding:
+                                            encoding = 'gbk'
+                                        extract_sub_name = extract_sub_name.\
+                                            decode(encoding)
+                                        extract_sub_name = extract_sub_name.\
+                                            encode(GetSubtitles.output_encode)
+                                    else:
+                                        extract_sub_name = extract_sub_name.\
+                                            encode(GetSubtitles.output_encode)
                                 print(prefix + ' ' + extract_sub_name + '\n')
                             except UnicodeDecodeError:
                                 print(prefix + ' '
@@ -475,6 +547,12 @@ def main():
         help='show search results and choose one to download'
     )
     arg_parser.add_argument(
+        '-s',
+        '--single',
+        action='store_true',
+        help='show subtitles in the compacted file and choose one to download'
+    )
+    arg_parser.add_argument(
         '-o',
         '--over',
         action='store_true',
@@ -516,7 +594,7 @@ def main():
         print('unknown error, add --debug to show detailed infomation')
         return
 
-    GetSubtitles(args.name, args.query, args.more,
+    GetSubtitles(args.name, args.query, args.single, args.more,
                  args.over, args.debug, sub_num=args.number,
                  downloader=args.downloader).start()
 
