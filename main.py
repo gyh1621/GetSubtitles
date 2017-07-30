@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import os
+import re
 import sys
 import zipfile
 import rarfile
@@ -119,7 +120,34 @@ class GetSubtitles(object):
         keywords = []
         info_dict = guessit(name)
 
-        base_keyword = info_dict['title']
+        # 若视频名中英混合，去掉字少的语言
+        title = info_dict['title']
+        if py == 2:
+            if sys.stdout.encoding == 'cp936':
+                encoding = 'gbk'
+            else:
+                encoding = 'utf8'
+            title = title.decode(encoding)
+            c_pattern = u'[\u4e00-\u9fff]'
+            e_pattern = u'[a-zA-Z]'
+            c_num = len(re.findall(c_pattern, title))
+            e_num = len(re.findall(e_pattern, title))
+            if c_num > e_num:
+                title = re.sub(e_pattern, '', title).encode('utf8')
+            else:
+                title = re.sub(c_pattern, '', title).encode('utf8')
+        elif py == 3:
+            c_pattern = '[\u4e00-\u9fff]'
+            e_pattern = '[a-zA-Z]'
+            c_num = len(re.findall(c_pattern, title))
+            e_num = len(re.findall(e_pattern, title))
+            if c_num > e_num:
+                title = re.sub(e_pattern, '', title)
+            else:
+                title = re.sub(c_pattern, '', title)
+        title = title.strip()
+
+        base_keyword = title
         if info_dict.get('year') and info_dict.get('type') == 'movie':
             base_keyword += (' ' + str(info_dict['year']))  # 若为电影添加年份
         if info_dict.get('season'):
@@ -208,6 +236,9 @@ class GetSubtitles(object):
                 sub_title = ''
             sub_season = str(sub_name_info.get('season'))
             sub_episode = str(sub_name_info.get('episode'))
+            if py == 2 and isinstance(video_name, str):
+                video_name = video_name.decode(
+                    chardet.detect(video_name)['encoding'])
             if video_name == sub_title:
                 if not (season == sub_season and episode == sub_episode):
                     continue  # 名字匹配，剧集不匹配
@@ -350,7 +381,12 @@ class GetSubtitles(object):
 
         v_name_without_format = os.path.splitext(v_name)[0]
         # video_name + sub_type
-        sub_new_name = v_name_without_format + os.path.splitext(sub_name)[1]
+        if py == 2:
+            sub_new_name = v_name_without_format \
+                           + os.path.splitext(sub_name.encode('utf8'))[1]
+        else:
+            sub_new_name = v_name_without_format \
+                           + os.path.splitext(sub_name)[1]
 
         for one_sub_type in self.sub_format_list:  # 删除若已经存在的字幕
             if os.path.exists(v_name_without_format + one_sub_type):
@@ -376,15 +412,16 @@ class GetSubtitles(object):
             self.s_error = ''  # 重置错误记录
             self.f_error = ''
 
-            print('\n' + prefix + ' ' + one_video)  # 打印当前视频及其路径
-            print(prefix + ' ' + video_info['path'] + '\n' + prefix)
-
-            if video_info['have_subtitle'] and not self.over:
-                print(prefix
-                      + " subtitle already exists, add '-o' to replace it.")
-                continue
             try:
                 keywords, info_dict = self.sort_keyword(one_video)
+                print('\n' + prefix + ' ' + info_dict['title'])  # 打印当前视频及其路径
+                print(prefix + ' ' + video_info['path'] + '\n' + prefix)
+
+                if video_info['have_subtitle'] and not self.over:
+                    print(prefix
+                          + " subtitle already exists, add '-o' to replace it.")
+                    continue
+
                 sub_dict = order_dict()
                 for downloader in self.downloader:
                     sub_dict.update(
@@ -394,7 +431,7 @@ class GetSubtitles(object):
                     if len(sub_dict) >= self.sub_num:
                         break
                 if len(sub_dict) == 0:
-                    self.s_error += 'no search results'
+                    self.s_error += 'no search results.'
                     continue
 
                 extract_sub_name = None
