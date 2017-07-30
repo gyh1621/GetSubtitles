@@ -13,7 +13,6 @@ from traceback import format_exc
 import chardet
 from guessit import guessit
 from requests import exceptions
-from requests import get
 
 from sys_global_var import py, prefix
 from __init__ import __version__
@@ -473,7 +472,7 @@ class GetSubtitles(object):
                         print(prefix
                               + '  unsupported file type %s' % datatype[1:])
 
-            except exceptions.Timeout or exceptions.ConnectionError:
+            except (exceptions.Timeout, exceptions.ConnectionError):
                 self.s_error += 'connect failed, check network status.'
             except rarfile.RarCannotExec:
                 self.s_error += 'Unrar not installed?'
@@ -516,16 +515,6 @@ class GetSubtitles(object):
             len(all_video_dict) - len(self.failed_list),
             len(self.failed_list)
         ))
-
-
-def test_network():
-    try:
-        get('http://baidu.com')
-    except exceptions.ConnectionError:
-        return 0
-    except:
-        return -1
-    return 1
 
 
 def main():
@@ -586,13 +575,6 @@ def main():
 
     if args.over:
         print('\nThe script will replace the old subtitles if exist...\n')
-
-    if test_network() == 0:
-        print('check your network connection')
-        return
-    elif test_network() == -1:
-        print('unknown error, add --debug to show detailed infomation')
-        return
 
     GetSubtitles(args.name, args.query, args.single, args.more,
                  args.over, args.debug, sub_num=args.number,
