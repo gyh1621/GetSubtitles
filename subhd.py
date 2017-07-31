@@ -54,7 +54,7 @@ class SubHDDownloader(object):
         s = requests.session()
         while True:
             # 当前关键字查询
-            r = s.get(self.search_url + keyword, headers=self.headers)
+            r = s.get(self.search_url + keyword, headers=self.headers, timeout=10)
             bs_obj = BeautifulSoup(r.text, 'html.parser')
             if py == 2:
                 small_text = bs_obj.find('small').text.encode('utf8')

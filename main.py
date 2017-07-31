@@ -423,15 +423,21 @@ class GetSubtitles(object):
                     continue
 
                 sub_dict = order_dict()
-                for downloader in self.downloader:
-                    sub_dict.update(
-                        downloader.get_subtitles(
-                                tuple(keywords), sub_num=self.sub_num)
-                    )
+                for i, downloader in enumerate(self.downloader):
+                    try:
+                        sub_dict.update(
+                            downloader.get_subtitles(
+                                    tuple(keywords), sub_num=self.sub_num)
+                        )
+                    except exceptions.Timeout:
+                        print(prefix + ' connect timeout, search next site.')
+                        if i < (len(self.downloader)-1):
+                            continue
+                        raise exceptions.Timeout
                     if len(sub_dict) >= self.sub_num:
                         break
                 if len(sub_dict) == 0:
-                    self.s_error += 'no search results.'
+                    self.s_error += 'no search results. '
                     continue
 
                 extract_sub_name = None

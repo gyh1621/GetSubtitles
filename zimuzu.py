@@ -41,7 +41,7 @@ class ZimuzuDownloader(object):
         s = requests.session()
         while True:
             # 当前关键字查询
-            r = s.get(self.search_url.format(keyword), headers=self.headers)
+            r = s.get(self.search_url.format(keyword), headers=self.headers, timeout=10)
             bs_obj = BeautifulSoup(r.text, 'html.parser')
             tab_text = bs_obj.find('div', {'class': 'article-tab'}).text
             tab_text = tab_text.encode('utf8') if py == 2 else tab_text
