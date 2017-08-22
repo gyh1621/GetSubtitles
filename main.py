@@ -277,7 +277,7 @@ class GetSubtitles(object):
             score[-1] += ('srt' in one_sub) * 1
 
         max_score = max(score)
-        if max_score == 0 and not self.query:
+        if max_score <= 0 and not self.query:
             return None
         max_pos = score.index(max_score)
 
