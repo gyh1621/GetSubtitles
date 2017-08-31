@@ -414,7 +414,7 @@ class GetSubtitles(object):
 
             try:
                 keywords, info_dict = self.sort_keyword(one_video)
-                print('\n' + prefix + ' ' + info_dict['title'])  # 打印当前视频及其路径
+                print('\n' + prefix + ' ' + one_video)  # 打印当前视频及其路径
                 print(prefix + ' ' + video_info['path'] + '\n' + prefix)
 
                 if video_info['have_subtitle'] and not self.over:

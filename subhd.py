@@ -56,10 +56,18 @@ class SubHDDownloader(object):
             # 当前关键字查询
             r = s.get(self.search_url + keyword, headers=self.headers, timeout=10)
             bs_obj = BeautifulSoup(r.text, 'html.parser')
-            if py == 2:
-                small_text = bs_obj.find('small').text.encode('utf8')
-            else:
-                small_text = bs_obj.find('small').text
+            try:
+                if py == 2:
+                    small_text = bs_obj.find('small').text.encode('utf8')
+                else:
+                    small_text = bs_obj.find('small').text
+            except AttributeError:
+                char_error = 'The URI you submitted has disallowed characters'
+                if char_error in bs_obj.text:
+                    print(prefix + ' [SUBHD ERROR] '
+                          + char_error + ': ' + keyword)
+                    return None
+
             if '总共 0 条' not in small_text:
                 for one_box in bs_obj.find_all('div', {'class': 'box'}):
                     a = one_box.find('div', {'class': 'd_title'}).find('a')
