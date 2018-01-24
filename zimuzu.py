@@ -89,18 +89,30 @@ class ZimuzuDownloader(object):
         bs_obj = BeautifulSoup(r.text, 'html.parser')
         a = bs_obj.find('div', {'class': 'subtitle-links'}).a
         download_link = a.attrs['href']
+        r = s.get(download_link, headers=self.headers)
+        bs_obj = BeautifulSoup(r.text, 'html.parser')
+        a = bs_obj.find('div', {'class': 'download-box'}).a
+        download_link = a.attrs['href']
 
         try:
             with closing(requests.get(download_link, stream=True)) as response:
                 chunk_size = 1024  # 单次请求最大值
-                # 内容体总大小
-                content_size = int(response.headers['content-length'])
-                bar = ProgressBar(prefix + ' Get',
-                                  file_name.strip(), content_size)
-                sub_data_bytes = b''
-                for data in response.iter_content(chunk_size=chunk_size):
-                    sub_data_bytes += data
-                    bar.refresh(len(sub_data_bytes))
+                if response.headers.get('content-length'):
+                    # 内容体总大小
+                    content_size = int(response.headers['content-length'])
+                    bar = ProgressBar(prefix + ' Get',
+                                      file_name.strip(), content_size)
+                    sub_data_bytes = b''
+                    for data in response.iter_content(chunk_size=chunk_size):
+                        sub_data_bytes += data
+                        bar.refresh(len(sub_data_bytes))
+                else:
+                    bar = ProgressBar(prefix + ' Get', file_name.strip())
+                    sub_data_bytes = b''
+                    for data in response.iter_content(chunk_size=chunk_size):
+                        sub_data_bytes += data
+                        bar.point_wait()
+                    bar.point_wait(end=True)
             # sub_data_bytes = requests.get(download_link, timeout=10).content
         except requests.Timeout:
             return None, None
@@ -111,6 +123,13 @@ class ZimuzuDownloader(object):
         elif '7z' in download_link:
             datatype = '.7z'
         else:
-            datatype = 'Unknown'
+            if '.rar' in file_name:
+                datatype = '.rar'
+            elif '.zip' in file_name:
+                datatype = '.zip'
+            elif '.7z' in file_name:
+                datatype = '.7z'
+            else:
+                datatype = 'Unknown'
 
         return datatype, sub_data_bytes

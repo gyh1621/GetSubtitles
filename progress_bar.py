@@ -20,6 +20,7 @@ class ProgressBar(object):
         self.total = total
         self.count_time = count_time
         self.prefix_info = prefix_info
+        self.point = [0, 3]
 
     def refresh(self, cur_len):
         terminal_width = get_terminal_size().columns  # 获取终端宽度
@@ -43,18 +44,36 @@ class ProgressBar(object):
             print(info, end='\r')
             sleep(1)
 
+    def point_wait(self, end=False):
+        terminal_width = get_terminal_size().columns
+
+        info = "%s %s " % (self.prefix_info, self.title)
+        info += '.' * self.point[0]
+        end_str = '\r' if not end else '\n'
+        print(' ' * (terminal_width - 5), end='\r')
+        print(info, end=end_str)
+        if self.point[0] > self.point[1]:
+            self.point[0] = 1
+        else:
+            self.point[0] += 1
+
 
 def main():
 
     import time
 
-    bar = ProgressBar('Downloading', 'test', 100)
-    for i in range(101):
-        # print('1')
-        time.sleep(0.05)
-        bar.refresh(i)
-    bar = ProgressBar('Count down...', count_time=10)
-    bar.count_down()
+    #bar = ProgressBar('Downloading', 'test', 100)
+    #for i in range(101):
+    #    # print('1')
+    #    time.sleep(0.05)
+    #    bar.refresh(i)
+    #bar = ProgressBar('Count down...', count_time=10)
+    #bar.count_down()
+    bar = ProgressBar('Point waiting', 'test')
+    for i in range(10):
+        bar.point_wait()
+        time.sleep(1)
+    bar.point_wait(end=True)
 
 
 if __name__ == '__main__':
