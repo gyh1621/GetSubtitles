@@ -2,8 +2,6 @@
 #coding: utf-8
 
 from __future__ import print_function
-import json
-import re
 from contextlib import closing
 from collections import OrderedDict as order_dict
 
@@ -63,11 +61,16 @@ class ZimukuDownloader(object):
                 if bs_obj.find('div', {'class': 'item'}):
                     # 综合搜索页面
                     for item in bs_obj.find_all('div', {'class': 'item'}):
-                        title_box = item.find('div', {'class': 'title'}).p
+                        title_boxes = item.find(
+                            'div', {'class': 'title'}).find_all('p')
+                        title_box = title_boxes[0]
+                        sub_title_box = title_boxes[1]
                         if py == 2:
                             item_title = title_box.text.encode('utf8')
+                            item_sub_title = sub_title_box.text.encode('utf8')
                         else:
                             item_title = title_box.text
+                            item_sub_title = sub_title_box.text
                         item_info = guessit(item_title)
                         if info.get('year') and item_info.get('year'):
                             if info['year'] != item_info['year']:
@@ -76,8 +79,12 @@ class ZimukuDownloader(object):
                         item_titles = [
                             item_info.get('title', '').lower(),
                             item_info.get('alternative_title', '').lower()
-                        ]
-                        if info['title'].lower() not in item_titles:
+                        ] + item_sub_title.lower().strip().split(',')
+                        title_included = sum([
+                            1 for _ in item_sub_title
+                            if info['title'].lower() not in _
+                        ])
+                        if title_included == 0:
                             # guessit抽取标题不匹配，跳过
                             item_title_split = \
                                 [one.split() for one in item_titles]
@@ -86,11 +93,11 @@ class ZimukuDownloader(object):
                                         if _ in item_title_split[0]])
                             sum2 = sum([1 for _ in info_title_split
                                         if _ in item_title_split[1]])
-                            if not (sum1 / len(info_title_split) >= 0.5 \
+                            if not (sum1 / len(info_title_split) >= 0.5
                                     or sum2 / len(info_title_split) >= 0.5):
                                 # 标题不匹配，跳过
                                 continue
-                        for a in item.find_all('td', {'class': 'first'})[:2]:
+                        for a in item.find_all('td', {'class': 'first'})[:3]:
                             a = a.a
                             a_link = self.site_url + a.attrs['href']
                             if py == 2:
