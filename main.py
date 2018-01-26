@@ -19,6 +19,7 @@ from sys_global_var import py, prefix
 from __init__ import __version__
 from subhd import SubHDDownloader
 from zimuzu import ZimuzuDownloader
+from zimuku import ZimukuDownloader
 
 
 class GetSubtitles(object):
@@ -52,14 +53,18 @@ class GetSubtitles(object):
         self.f_error = ''
         self.subhd = SubHDDownloader()
         self.zimuzu = ZimuzuDownloader()
+        self.zimuku = ZimukuDownloader()
         if not downloader:
-            self.downloader = [self.zimuzu, self.subhd]
+            self.downloader = [self.zimuzu, self.zimuku, self.subhd]
         elif downloader == 'subhd':
             self.downloader = [self.subhd]
         elif downloader == 'zimuzu':
             self.downloader = [self.zimuzu]
+        elif downloader == 'zimuku':
+            self.downloader = [self.zimuku]
         else:
-            print("no such downloader, please choose from 'subhd','zimuzu'")
+            print("no such downloader, "
+                  "please choose from 'subhd','zimuzu' and 'zimuku'")
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
 
     def get_path_name(self, args):
@@ -148,8 +153,8 @@ class GetSubtitles(object):
         title = title.strip()
 
         base_keyword = title
-        if info_dict.get('year') and info_dict.get('type') == 'movie':
-            base_keyword += (' ' + str(info_dict['year']))  # 若为电影添加年份
+        #if info_dict.get('year') and info_dict.get('type') == 'movie':
+        #    base_keyword += (' ' + str(info_dict['year']))  # 若为电影添加年份
         if info_dict.get('season'):
             base_keyword += (' s%s' % str(info_dict['season']).zfill(2))
         keywords.append(base_keyword)
@@ -317,8 +322,12 @@ class GetSubtitles(object):
         sub_buff.write(sub_data_b)
 
         if datatype == '.zip':
-            file_handler = zipfile.ZipFile(sub_buff, mode='r')
-        elif datatype == '.rar':
+            try:
+                file_handler = zipfile.ZipFile(sub_buff, mode='r')
+            except:
+                # try with rarfile
+                datatype = '.rar'
+        if datatype == '.rar':
             file_handler = rarfile.RarFile(sub_buff, mode='r')
 
         sub_lists_dict = dict()
@@ -426,8 +435,7 @@ class GetSubtitles(object):
                 for i, downloader in enumerate(self.downloader):
                     try:
                         sub_dict.update(
-                            downloader.get_subtitles(
-                                    tuple(keywords), sub_num=self.sub_num)
+                            downloader.get_subtitles(tuple(keywords))
                         )
                     except exceptions.Timeout:
                         print(prefix + ' connect timeout, search next site.')
@@ -475,6 +483,10 @@ class GetSubtitles(object):
                                   'with subhd downloader, '
                                   'please change to other downloaders')
                             return
+                    elif '[ZIMUKU]' in sub_choice:
+                        datatype, sub_data_bytes = self.zimuku.download_file(
+                            sub_choice, link
+                        )
 
                     if datatype in self.support_file_list:
                         # 获得猜测字幕名称
