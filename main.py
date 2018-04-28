@@ -437,11 +437,13 @@ class GetSubtitles(object):
                         sub_dict.update(
                             downloader.get_subtitles(tuple(keywords))
                         )
-                    except exceptions.Timeout:
+                    except (exceptions.Timeout, exceptions.ConnectionError) as e:
                         print(prefix + ' connect timeout, search next site.')
                         if i < (len(self.downloader)-1):
                             continue
-                        raise exceptions.Timeout
+                        else:
+                            print(prefix + ' PLEASE CHECK YOUR NETWORK STATUS')
+                            sys.exit(0)
                     if len(sub_dict) >= self.sub_num:
                         break
                 if len(sub_dict) == 0:
@@ -491,10 +493,13 @@ class GetSubtitles(object):
                     if datatype in self.support_file_list:
                         # 获得猜测字幕名称
                         # 查询模式必有返回值，自动模式无猜测值返回None
-                        extract_sub_name = self.extract_subtitle(
-                                one_video, video_info['path'], datatype,
-                                sub_data_bytes, info_dict, self.single
-                                )
+                        try:
+                            extract_sub_name = self.extract_subtitle(
+                                    one_video, video_info['path'], datatype,
+                                    sub_data_bytes, info_dict, self.single
+                                    )
+                        except rarfile.BadRarFile:
+                            continue
                         if extract_sub_name:
                             extract_sub_name = extract_sub_name.split('/')[-1]
                             try:
@@ -527,8 +532,6 @@ class GetSubtitles(object):
                         print(prefix
                               + '  unsupported file type %s' % datatype[1:])
 
-            except (exceptions.Timeout, exceptions.ConnectionError):
-                self.s_error += 'connect failed, check network status.'
             except rarfile.RarCannotExec:
                 self.s_error += 'Unrar not installed?'
             except AttributeError:
