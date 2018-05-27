@@ -391,8 +391,12 @@ class GetSubtitles(object):
         v_name_without_format = os.path.splitext(v_name)[0]
         # video_name + sub_type
         if py == 2:
-            sub_new_name = v_name_without_format \
-                           + os.path.splitext(sub_name.encode('utf8'))[1]
+            try:
+                sub_new_name = v_name_without_format \
+                               + os.path.splitext(sub_name.encode('utf8'))[1]
+            except UnicodeDecodeError:
+                sub_new_name = v_name_without_format \
+                               + os.path.splitext(sub_name.decode('utf8'))[1]
         else:
             sub_new_name = v_name_without_format \
                            + os.path.splitext(sub_name)[1]
