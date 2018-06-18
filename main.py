@@ -21,12 +21,6 @@ from subhd import SubHDDownloader
 from zimuzu import ZimuzuDownloader
 # from zimuku import ZimukuDownloader
 
-if sys.platform == 'win32':
-    unrar_path = os.path.join(
-        os.path.split(os.path.realpath(__file__))[0], 'unrar.exe'
-    )
-    rarfile.UNRAR_TOOL = unrar_path
-
 
 class GetSubtitles(object):
 
