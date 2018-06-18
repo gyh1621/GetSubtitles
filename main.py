@@ -19,7 +19,13 @@ from sys_global_var import py, prefix
 from __init__ import __version__
 from subhd import SubHDDownloader
 from zimuzu import ZimuzuDownloader
-from zimuku import ZimukuDownloader
+# from zimuku import ZimukuDownloader
+
+if sys.platform == 'win32':
+    unrar_path = os.path.join(
+        os.path.split(os.path.realpath(__file__))[0], 'unrar.exe'
+    )
+    rarfile.UNRAR_TOOL = unrar_path
 
 
 class GetSubtitles(object):
@@ -53,18 +59,20 @@ class GetSubtitles(object):
         self.f_error = ''
         self.subhd = SubHDDownloader()
         self.zimuzu = ZimuzuDownloader()
-        self.zimuku = ZimukuDownloader()
+        # self.zimuku = ZimukuDownloader()
         if not downloader:
-            self.downloader = [self.zimuzu, self.zimuku, self.subhd]
+            # self.downloader = [self.zimuzu, self.zimuku, self.subhd]
+            self.downloader = [self.zimuzu, self.subhd]
         elif downloader == 'subhd':
             self.downloader = [self.subhd]
         elif downloader == 'zimuzu':
             self.downloader = [self.zimuzu]
-        elif downloader == 'zimuku':
-            self.downloader = [self.zimuku]
+        # elif downloader == 'zimuku':
+            # self.downloader = [self.zimuku]
         else:
-            print("no such downloader, "
-                  "please choose from 'subhd','zimuzu' and 'zimuku'")
+            # print("no such downloader, "
+            #       "please choose from 'subhd','zimuzu' and 'zimuku'")
+            print("no such downloader, please choose from 'subhd','zimuzu'")
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
 
     def get_path_name(self, args):
@@ -153,7 +161,7 @@ class GetSubtitles(object):
         title = title.strip()
 
         base_keyword = title
-        #if info_dict.get('year') and info_dict.get('type') == 'movie':
+        # if info_dict.get('year') and info_dict.get('type') == 'movie':
         #    base_keyword += (' ' + str(info_dict['year']))  # 若为电影添加年份
         if info_dict.get('season'):
             base_keyword += (' s%s' % str(info_dict['season']).zfill(2))
@@ -489,10 +497,10 @@ class GetSubtitles(object):
                                   'with subhd downloader, '
                                   'please change to other downloaders')
                             return
-                    elif '[ZIMUKU]' in sub_choice:
-                        datatype, sub_data_bytes = self.zimuku.download_file(
-                            sub_choice, link
-                        )
+                    # elif '[ZIMUKU]' in sub_choice:
+                    #     datatype, sub_data_bytes = self.zimuku.download_file(
+                    #         sub_choice, link
+                    #    )
 
                     if datatype in self.support_file_list:
                         # 获得猜测字幕名称
