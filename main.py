@@ -393,12 +393,21 @@ class GetSubtitles(object):
         v_name_without_format = os.path.splitext(v_name)[0]
         # video_name + sub_type
         if py == 2:
-            try:
-                sub_new_name = v_name_without_format \
-                               + os.path.splitext(sub_name.encode('utf8'))[1]
-            except UnicodeDecodeError:
-                sub_new_name = v_name_without_format \
-                               + os.path.splitext(sub_name.decode('utf8'))[1]
+            possible_handlers = [
+                "sub_name.encode('utf8')",
+                "sub_name.decode('utf8')",
+                "sub_name"
+            ]
+            for h_index, handler in enumerate(possible_handlers):
+                try:
+                    sub_new_name = v_name_without_format \
+                                   + os.path.splitext(eval(handler))[1]
+                    break
+                except Exception as e:
+                    if h_index == len(possible_handlers) - 1:
+                        raise e
+                    else:
+                        continue
         else:
             sub_new_name = v_name_without_format \
                            + os.path.splitext(sub_name)[1]
@@ -521,7 +530,11 @@ class GetSubtitles(object):
                                         encoding = chardet.\
                                                 detect(extract_sub_name)
                                         encoding = encoding['encoding']
-                                        if 'ISO' in encoding:
+                                        # reason of adding windows-1251 check:
+                                        # using ZIMUZU downloader
+                                        # I.Robot.2004.1080p.Bluray.x264.DTS-DEFiNiTE.mkv
+                                        if 'ISO' in encoding \
+                                                or "windows-1251" in encoding:
                                             encoding = 'gbk'
                                         extract_sub_name = extract_sub_name.\
                                             decode(encoding)
