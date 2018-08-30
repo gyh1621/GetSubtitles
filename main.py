@@ -30,7 +30,7 @@ class GetSubtitles(object):
         output_encode = 'utf8'
 
     def __init__(self, name, query, single,
-                 more, over, debug, sub_num, downloader):
+                 more, both, over, debug, sub_num, downloader):
         self.video_format_list = ['.webm', '.mkv', '.flv', '.vob', '.ogv',
                                   '.ogg', '.drc', '.gif', '.gifv', '.mng',
                                   '.avi', '.mov', '.qt', '.wmv', '.yuv',
@@ -42,6 +42,7 @@ class GetSubtitles(object):
         self.sub_format_list = ['.ass', '.srt', '.ssa', '.sub']
         self.support_file_list = ['.zip', '.rar']
         self.arg_name = name
+        self.both = both
         self.query, self.single = query, single
         self.more, self.over = more, over
         if not sub_num:
@@ -316,7 +317,7 @@ class GetSubtitles(object):
         return sub_lists_dict
 
     def extract_subtitle(self, v_name, v_path, datatype,
-                         sub_data_b, v_info_d, single):
+                         sub_data_b, v_info_d, single, both):
 
         """ 接受下载好的字幕包字节数据， 猜测字幕并解压。 """
 
@@ -392,6 +393,7 @@ class GetSubtitles(object):
 
         v_name_without_format = os.path.splitext(v_name)[0]
         # video_name + sub_type
+        to_extract_types = []
         if py == 2:
             possible_handlers = [
                 "sub_name.encode('utf8')",
@@ -400,8 +402,7 @@ class GetSubtitles(object):
             ]
             for h_index, handler in enumerate(possible_handlers):
                 try:
-                    sub_new_name = v_name_without_format \
-                                   + os.path.splitext(eval(handler))[1]
+                    sub_title, sub_type = os.path.splitext(eval(handler))
                     break
                 except Exception as e:
                     if h_index == len(possible_handlers) - 1:
@@ -409,23 +410,35 @@ class GetSubtitles(object):
                     else:
                         continue
         else:
-            sub_new_name = v_name_without_format \
-                           + os.path.splitext(sub_name)[1]
+            sub_title, sub_type = os.path.splitext(sub_name)
+        to_extract_types.append(sub_type)
+        if both:
+            another_sub_type = '.srt' if sub_type == '.ass' else '.ass'
+            another_sub = sub_title + another_sub_type
+            if another_sub in list(sub_lists_dict.keys()):
+                to_extract_types.append(another_sub_type)
+            else:
+                print(prefix +
+                      ' no %s subtitles in this archive' % another_sub_type)
 
         for one_sub_type in self.sub_format_list:  # 删除若已经存在的字幕
             if os.path.exists(v_name_without_format + one_sub_type):
                 os.remove(v_name_without_format + one_sub_type)
 
-        with open(sub_new_name, 'wb') as sub:  # 保存字幕
-            file_handler = sub_lists_dict[sub_name]
-            sub.write(file_handler.read(sub_name))
+        for one_sub_type in to_extract_types:
+            sub_new_name = v_name_without_format + one_sub_type
+            with open(sub_new_name, 'wb') as sub:  # 保存字幕
+                file_handler = sub_lists_dict[sub_title+one_sub_type]
+                sub.write(file_handler.read(sub_name))
 
         if self.more:  # 保存原字幕压缩包
             with open(v_name_without_format + datatype, 'wb') as f:
                 f.write(sub_data_b)
             print(prefix + ' save original file.')
 
-        return sub_name
+        extracted_sub_names = [sub_title + one_sub_type
+                               for one_sub_type in to_extract_types]
+        return extracted_sub_names
 
     def start(self):
 
@@ -509,13 +522,19 @@ class GetSubtitles(object):
                         # 获得猜测字幕名称
                         # 查询模式必有返回值，自动模式无猜测值返回None
                         try:
-                            extract_sub_name = self.extract_subtitle(
-                                    one_video, video_info['path'], datatype,
-                                    sub_data_bytes, info_dict, self.single
-                                    )
+                            extract_sub_names = self.extract_subtitle(
+                                one_video, video_info['path'],
+                                datatype, sub_data_bytes, info_dict,
+                                self.single, self.both
+                            )
                         except rarfile.BadRarFile:
                             continue
-                        if extract_sub_name:
+                        if not extract_sub_names:
+                            if self.query:  # 查询模式下下载字幕包为不支持类型
+                                print(prefix +
+                                      ' unsupported file type %s' % datatype)
+                                continue
+                        for extract_sub_name in extract_sub_names:
                             extract_sub_name = extract_sub_name.split('/')[-1]
                             try:
                                 # zipfile: Historical ZIP filename encoding
@@ -543,13 +562,10 @@ class GetSubtitles(object):
                                     else:
                                         extract_sub_name = extract_sub_name.\
                                             encode(GetSubtitles.output_encode)
-                                print(prefix + ' ' + extract_sub_name + '\n')
+                                print(prefix + ' ' + extract_sub_name)
                             except UnicodeDecodeError:
                                 print(prefix + ' '
-                                      + extract_sub_name.encode('gbk') + '\n')
-                    elif self.query:  # 查询模式下下载字幕包为不支持类型
-                        print(prefix
-                              + '  unsupported file type %s' % datatype[1:])
+                                      + extract_sub_name.encode('gbk'))
 
             except rarfile.RarCannotExec:
                 self.s_error += 'Unrar not installed?'
@@ -637,6 +653,13 @@ def main():
         help='set max number of subtitles to be choosen when in query mode'
     )
     arg_parser.add_argument(
+        '-b',
+        '--both',
+        action='store_true',
+        help='save .srt and .ass subtitles at the same time '
+             'if two types exist in the same archive'
+    )
+    arg_parser.add_argument(
         '-d',
         '--downloader',
         action='store',
@@ -654,7 +677,7 @@ def main():
         print('\nThe script will replace the old subtitles if exist...\n')
 
     GetSubtitles(args.name, args.query, args.single, args.more,
-                 args.over, args.debug, sub_num=args.number,
+                 args.both, args.over, args.debug, sub_num=args.number,
                  downloader=args.downloader).start()
 
 
