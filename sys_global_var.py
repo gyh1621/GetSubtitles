@@ -17,6 +17,6 @@ else:
 
 # set prefix
 if py == 2 and is_gbk:
-    prefix = '├'.decode('utf8').encode('gbk')
+    prefix = '├ '.decode('utf8').encode('gbk')
 else:
-    prefix = '├'
+    prefix = '├ '
