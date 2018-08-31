@@ -203,7 +203,10 @@ class GetSubtitles(object):
         while not choices:
             try:
                 print(prefix)
-                choices = input(prefix + '  choose subtitle: ')
+                if py == 2:
+                    choices = raw_input(prefix + '  choose subtitle: ')
+                else:
+                    choices = input(prefix + '  choose subtitle: ')
                 choices = [int(c) for c in re.split(',|，', choices)]
             except ValueError:
                 print(prefix + '  Error: only numbers accepted')
@@ -418,12 +421,12 @@ class GetSubtitles(object):
                         continue
         else:
             sub_title, sub_type = os.path.splitext(sub_name)
-        to_extract_types.append(sub_type)
+        to_extract_subs = [[sub_name, sub_type]]
         if both:
             another_sub_type = '.srt' if sub_type == '.ass' else '.ass'
-            another_sub = sub_title + another_sub_type
+            another_sub = sub_name.replace(sub_type, another_sub_type)
             if another_sub in list(sub_lists_dict.keys()):
-                to_extract_types.append(another_sub_type)
+                to_extract_subs.append([another_sub, another_sub_type])
             else:
                 print(prefix +
                       ' no %s subtitles in this archive' % another_sub_type)
@@ -433,14 +436,14 @@ class GetSubtitles(object):
                 if os.path.exists(v_name_without_format + one_sub_type):
                     os.remove(v_name_without_format + one_sub_type)
 
-        for one_sub_type in to_extract_types:
+        for one_sub, one_sub_type in to_extract_subs:
             if rename:
                 sub_new_name = v_name_without_format + one_sub_type
             else:
-                sub_new_name = sub_title + one_sub_type
+                sub_new_name = one_sub
             with open(sub_new_name, 'wb') as sub:  # 保存字幕
-                file_handler = sub_lists_dict[sub_title+one_sub_type]
-                sub.write(file_handler.read(sub_name))
+                file_handler = sub_lists_dict[one_sub]
+                sub.write(file_handler.read(one_sub))
 
         if self.more:  # 保存原字幕压缩包
             if rename:
@@ -451,9 +454,7 @@ class GetSubtitles(object):
                 f.write(sub_data_b)
             print(prefix + ' save original file.')
 
-        extracted_sub_names = [sub_title + one_sub_type
-                               for one_sub_type in to_extract_types]
-        return extracted_sub_names
+        return to_extract_subs
 
     def process_archive(self, one_video, video_info,
                         sub_choice, link, info_dict, rename=True, delete=True):
@@ -502,10 +503,8 @@ class GetSubtitles(object):
             )
             if not extract_sub_names:
                 if self.query:  # 查询模式下下载字幕包为不支持类型
-                    print(prefix +
-                          ' unsupported file type %s' % datatype)
-                    raise TypeError
-            for extract_sub_name in extract_sub_names:
+                    raise TypeError(' unsupported file type %s' % datatype)
+            for extract_sub_name, extract_sub_type in extract_sub_names:
                 extract_sub_name = extract_sub_name.split('/')[-1]
                 try:
                     # zipfile: Historical ZIP filename encoding
