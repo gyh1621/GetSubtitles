@@ -148,8 +148,7 @@ class ZimukuDownloader(object):
                     elif 'jollyroger' in lang.attrs['src']:
                         type_score += 8
                 sub_info['lan'] = type_score
-                download_link = 'http:' \
-                    + bs_obj.find('a', {'id': 'down1'}).attrs['href']
+                download_link = bs_obj.find('a', {'id': 'down1'}).attrs['href']
                 r = s.get(download_link, timeout=60)
                 bs_obj = BeautifulSoup(r.text, 'html.parser')
                 download_link = bs_obj.find('a', {'rel': 'nofollow'})

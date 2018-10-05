@@ -17,9 +17,9 @@ from requests import exceptions
 
 from sys_global_var import py, prefix
 from __init__ import __version__
-from subhd import SubHDDownloader
+# from subhd import SubHDDownloader
 from zimuzu import ZimuzuDownloader
-# from zimuku import ZimukuDownloader
+from zimuku import ZimukuDownloader
 
 
 class GetSubtitles(object):
@@ -52,22 +52,21 @@ class GetSubtitles(object):
         self.debug = debug
         self.s_error = ''
         self.f_error = ''
-        self.subhd = SubHDDownloader()
+        # self.subhd = SubHDDownloader()
         self.zimuzu = ZimuzuDownloader()
-        # self.zimuku = ZimukuDownloader()
+        self.zimuku = ZimukuDownloader()
         if not downloader:
-            # self.downloader = [self.zimuzu, self.zimuku, self.subhd]
-            self.downloader = [self.zimuzu, self.subhd]
-        elif downloader == 'subhd':
-            self.downloader = [self.subhd]
+            self.downloader = [self.zimuzu, self.zimuku]
+        # elif downloader == 'subhd':
+        #     self.downloader = [self.subhd]
         elif downloader == 'zimuzu':
             self.downloader = [self.zimuzu]
-        # elif downloader == 'zimuku':
-            # self.downloader = [self.zimuku]
+        elif downloader == 'zimuku':
+            self.downloader = [self.zimuku]
         else:
             # print("no such downloader, "
             #       "please choose from 'subhd','zimuzu' and 'zimuku'")
-            print("no such downloader, please choose from 'subhd','zimuzu'")
+            print("no such downloader, please choose from 'zimuzu' and 'zimuku'")
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
 
     def get_path_name(self, args):
@@ -479,19 +478,19 @@ class GetSubtitles(object):
             datatype, sub_data_bytes = self.zimuzu.download_file(
                 sub_choice, link
             )
-        elif '[SUBHD]' in sub_choice:
-            datatype, sub_data_bytes, msg = self.subhd. \
-                download_file(sub_choice, link)
-            if msg == 'false':
-                print(prefix + ' error: '
-                               'download too frequently '
-                               'with subhd downloader, '
-                               'please change to other downloaders')
-                return
-        # elif '[ZIMUKU]' in sub_choice:
-        #     datatype, sub_data_bytes = self.zimuku.download_file(
-        #         sub_choice, link
-        #    )
+        # elif '[SUBHD]' in sub_choice:
+        #     datatype, sub_data_bytes, msg = self.subhd. \
+        #         download_file(sub_choice, link)
+        #     if msg == 'false':
+        #         print(prefix + ' error: '
+        #                        'download too frequently '
+        #                        'with subhd downloader, '
+        #                        'please change to other downloaders')
+        #         return
+        elif '[ZIMUKU]' in sub_choice:
+            datatype, sub_data_bytes = self.zimuku.download_file(
+                sub_choice, link
+           )
         extract_sub_names = []
         if datatype in self.support_file_list:
             # 获得猜测字幕名称
