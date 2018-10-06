@@ -7,8 +7,8 @@ from contextlib import closing
 import requests
 from bs4 import BeautifulSoup
 
-from sys_global_var import py, prefix
-from progress_bar import ProgressBar
+from .sys_global_var import py, prefix
+from .progress_bar import ProgressBar
 
 
 ''' Zimuzu 字幕下载器

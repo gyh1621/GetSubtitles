@@ -15,11 +15,11 @@ import chardet
 from guessit import guessit
 from requests import exceptions
 
-from sys_global_var import py, prefix
-from __init__ import __version__
+from getsub.__version__ import __version__
+from getsub.sys_global_var import py, prefix
 # from subhd import SubHDDownloader
-from zimuzu import ZimuzuDownloader
-from zimuku import ZimukuDownloader
+from getsub.zimuzu import ZimuzuDownloader
+from getsub.zimuku import ZimukuDownloader
 
 
 class GetSubtitles(object):
@@ -30,7 +30,7 @@ class GetSubtitles(object):
         output_encode = 'utf8'
 
     def __init__(self, name, query, single,
-                 more, both, over, debug, sub_num, downloader):
+                 more, both, over, plex, debug, sub_num, downloader):
         self.video_format_list = ['.webm', '.mkv', '.flv', '.vob', '.ogv',
                                   '.ogg', '.drc', '.gif', '.gifv', '.mng',
                                   '.avi', '.mov', '.qt', '.wmv', '.yuv',
@@ -49,6 +49,7 @@ class GetSubtitles(object):
             self.sub_num = 5
         else:
             self.sub_num = int(sub_num)
+        self.plex = plex
         self.debug = debug
         self.s_error = ''
         self.f_error = ''
@@ -89,7 +90,8 @@ class GetSubtitles(object):
                         list(
                             map(
                                 lambda sub_type:
-                                    int(v_name_no_format + sub_type in files),
+                                    int(v_name_no_format + sub_type in files
+                                        or v_name_no_format + '.zh' + sub_type in files),
                                     self.sub_format_list
                             )
                         )
@@ -179,7 +181,8 @@ class GetSubtitles(object):
         if not self.query:
             chosen_sub = list(sub_dict.keys())[0]
             link = sub_dict[chosen_sub]['link']
-            return [[chosen_sub, link]]
+            session = sub_dict[chosen_sub].get('session', None)
+            return [[chosen_sub, link, session]]
 
         for i, key in enumerate(sub_dict.keys()):
             if i == self.sub_num:
@@ -218,7 +221,8 @@ class GetSubtitles(object):
                 else:
                     chosen_sub = list(sub_dict.keys())[choice - 1]
                     link = sub_dict[chosen_sub]['link']
-                    chosen_subs.append([chosen_sub, link])
+                    session = sub_dict[chosen_sub].get('session', None)
+                    chosen_subs.append([chosen_sub, link, session])
         return chosen_subs
 
     def guess_subtitle(self, sublist, video_info):
@@ -226,9 +230,15 @@ class GetSubtitles(object):
         """ 传入压缩包字幕列表，视频信息，返回最佳字幕名称。
             若没有符合字幕，查询模式下返回第一条字幕， 否则返回None """
 
+        if not sublist:
+            print(prefix + ' Warn: ' + 'no subtitle in this archive')
+            return None
+
         video_name = video_info['title'].lower()
         season = str(video_info.get('season'))
         episode = str(video_info.get('episode'))
+        year = str(video_info.get('year'))
+        vtype = str(video_info.get('type'))
 
         score = []
         for one_sub in sublist:
@@ -252,6 +262,12 @@ class GetSubtitles(object):
                 sub_title = ''
             sub_season = str(sub_name_info.get('season'))
             sub_episode = str(sub_name_info.get('episode'))
+            sub_year = str(sub_name_info.get('year'))
+
+            if vtype == 'movie' and year != sub_year:
+                # 电影年份不匹配
+                continue
+
             if py == 2 and isinstance(video_name, str):
                 video_name = video_name.decode(
                     chardet.detect(video_name)['encoding'])
@@ -326,7 +342,7 @@ class GetSubtitles(object):
 
     def extract_subtitle(self, v_name, v_path, archive_name,
                          datatype, sub_data_b, v_info_d, rename,
-                         single, both, delete=True):
+                         single, both, plex, delete=True):
 
         """ 接受下载好的字幕包字节数据， 猜测字幕并解压。 """
 
@@ -434,10 +450,15 @@ class GetSubtitles(object):
             for one_sub_type in self.sub_format_list:  # 删除若已经存在的字幕
                 if os.path.exists(v_name_without_format + one_sub_type):
                     os.remove(v_name_without_format + one_sub_type)
+                if os.path.exists(v_name_without_format + '.zh' + one_sub_type):
+                    os.remove(v_name_without_format + '.zh' + one_sub_type)
 
         for one_sub, one_sub_type in to_extract_subs:
             if rename:
-                sub_new_name = v_name_without_format + one_sub_type
+                if plex:
+                    sub_new_name = v_name_without_format + '.zh' + one_sub_type
+                else:
+                    sub_new_name = v_name_without_format + one_sub_type
             else:
                 sub_new_name = one_sub
             with open(sub_new_name, 'wb') as sub:  # 保存字幕
@@ -456,7 +477,8 @@ class GetSubtitles(object):
         return to_extract_subs
 
     def process_archive(self, one_video, video_info,
-                        sub_choice, link, info_dict, rename=True, delete=True):
+                        sub_choice, link, session,
+                        info_dict, rename=True, delete=True):
         if py == 2:
             encoding = chardet.detect(sub_choice)['encoding']
             if isinstance(sub_choice, str):
@@ -489,7 +511,7 @@ class GetSubtitles(object):
         #         return
         elif '[ZIMUKU]' in sub_choice:
             datatype, sub_data_bytes = self.zimuku.download_file(
-                sub_choice, link
+                sub_choice, link, session=session
            )
         extract_sub_names = []
         if datatype in self.support_file_list:
@@ -498,11 +520,10 @@ class GetSubtitles(object):
             extract_sub_names = self.extract_subtitle(
                 one_video, video_info['path'],
                 sub_choice, datatype, sub_data_bytes, info_dict,
-                rename, self.single, self.both, delete=delete
+                rename, self.single, self.both, self.plex, delete=delete
             )
             if not extract_sub_names:
-                if self.query:  # 查询模式下下载字幕包为不支持类型
-                    raise TypeError(' unsupported file type %s' % datatype)
+                return None
             for extract_sub_name, extract_sub_type in extract_sub_names:
                 extract_sub_name = extract_sub_name.split('/')[-1]
                 try:
@@ -580,18 +601,27 @@ class GetSubtitles(object):
                 while not extract_sub_names and len(sub_dict) > 0:
                     sub_choices = self.choose_subtitle(sub_dict)
                     for i, choice in enumerate(sub_choices):
-                        sub_choice, link = choice
+                        sub_choice, link, session = choice
                         sub_dict.pop(sub_choice)
                         try:
                             if i == 0:
-                                extract_sub_names += self.process_archive(
+                                n_extract_sub_names = self.process_archive(
                                     one_video, video_info,
-                                    sub_choice, link, info_dict)
+                                    sub_choice, link, session, info_dict)
                             else:
-                                extract_sub_names += self.process_archive(
+                                n_extract_sub_names = self.process_archive(
                                     one_video, video_info,
-                                    sub_choice, link,
+                                    sub_choice, link, session,
                                     info_dict, rename=False, delete=False)
+                            if not n_extract_sub_names:
+                                print(prefix
+                                      + ' no matched subtitle in this archive')
+                                continue
+                            else:
+                                extract_sub_names += n_extract_sub_names
+                        except TypeError as e:
+                            print(format_exc())
+                            continue
                         except (rarfile.BadRarFile, TypeError) as e:
                             print(prefix + ' Error:' + str(e))
                             continue
@@ -604,8 +634,8 @@ class GetSubtitles(object):
                 self.s_error += str(e) + '. '
                 self.f_error += format_exc()
             finally:
-                if ('extract_sub_name' in dir()
-                        and not extract_sub_name
+                if ('extract_sub_names' in dir()
+                        and not extract_sub_names
                         and len(sub_dict) == 0):
                     # 自动模式下所有字幕包均没有猜测字幕
                     self.s_error += " failed to guess one subtitle,"
@@ -637,12 +667,19 @@ class GetSubtitles(object):
             len(self.failed_list)
         ))
 
+        return {
+            'total': len(all_video_dict),
+            'success': len(all_video_dict) - len(self.failed_list),
+            'fail': len(self.failed_list),
+            'fail_videos': self.failed_list
+        }
+
 
 def main():
 
     arg_parser = argparse.ArgumentParser(
         prog='GetSubtitles',
-        epilog='getsub %s \n\n@guoyuhang' % __version__,
+        epilog='getsub %s\n\n@guoyuhang' % (__version__),
         description='download subtitles easily',
         formatter_class=argparse.RawTextHelpFormatter
     )
@@ -698,6 +735,11 @@ def main():
         action='store_true',
         help='show more info of the error'
     )
+    arg_parser.add_argument(
+        '--plex',
+        action='store_true',
+        help="add .zh to the subtitle's name for plex to recognize"
+    )
 
     args = arg_parser.parse_args()
 
@@ -705,7 +747,7 @@ def main():
         print('\nThe script will replace the old subtitles if exist...\n')
 
     GetSubtitles(args.name, args.query, args.single, args.more,
-                 args.both, args.over, args.debug, sub_num=args.number,
+                 args.both, args.over, args.plex, args.debug, sub_num=args.number,
                  downloader=args.downloader).start()
 
 

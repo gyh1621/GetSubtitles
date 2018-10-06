@@ -9,8 +9,8 @@ import requests
 from bs4 import BeautifulSoup
 from guessit import guessit
 
-from sys_global_var import py, prefix
-from progress_bar import ProgressBar
+from .sys_global_var import py, prefix
+from .progress_bar import ProgressBar
 
 
 ''' Zimuku 字幕下载器
@@ -152,8 +152,7 @@ class ZimukuDownloader(object):
                 r = s.get(download_link, timeout=60)
                 bs_obj = BeautifulSoup(r.text, 'html.parser')
                 download_link = bs_obj.find('a', {'rel': 'nofollow'})
-                download_link = 'http://www.subku.net' + \
-                    download_link.attrs['href']
+                download_link = download_link.attrs['href']
                 sub_info['link'] = download_link
             else:
                 # 射手字幕页面
@@ -176,13 +175,20 @@ class ZimukuDownloader(object):
                 sub_info['lan'] = type_score
                 download_link = bs_obj.find('a', {'id': 'down1'}).attrs['href']
                 sub_info['link'] = download_link
+            backup_session = requests.session()
+            backup_session.headers.update(s.headers)
+            backup_session.headers['Referer'] = sub_info['link']
+            backup_session.cookies.update(s.cookies)
+            sub_info['session'] = backup_session
 
         return sub_dict
 
-    def download_file(self, file_name, download_link):
+    def download_file(self, file_name, download_link, session=None):
 
         try:
-            with closing(requests.get(download_link, stream=True)) as response:
+            if not session:
+                session = requests.session()
+            with closing(session.get(download_link, stream=True)) as response:
                 filename = response.headers['Content-Disposition']
                 chunk_size = 1024  # 单次请求最大值
                 # 内容体总大小
@@ -212,7 +218,7 @@ class ZimukuDownloader(object):
 if __name__ == '__main__':
     from main import GetSubtitles
     keywords, info_dict = GetSubtitles(
-        '', 1, 2, 3, 4, 5, 6, 7).sort_keyword('the expanse s01e01')
+        '', 1, 2, 3, 4, 5, 6, 7, 8, 9).sort_keyword('the expanse s01e01')
     zimuku = ZimukuDownloader()
     sub_dict = zimuku.get_subtitles(keywords)
     print('\nResult:')

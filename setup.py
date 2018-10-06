@@ -1,6 +1,6 @@
 # coding: utf8
-from setuptools import setup
-from __init__ import __version__
+from setuptools import setup, find_packages
+from getsub.__version__ import __version__
 
 setup(
     author="gyh1621",
@@ -9,7 +9,7 @@ setup(
     license="MIT",
     name='getsub',
     version=__version__,
-    packages=[''],
+    packages=find_packages(),
     install_requires=[    # 依赖列表
         'requests>=2.0',
         'bs4>=0.0.1',
@@ -19,7 +19,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'getsub = main: main'
+            'getsub = getsub.main: main'
         ]
     },
     zip_safe=False,
