@@ -2,11 +2,11 @@
 
 
 
-ÓÃgetsubÒ»²½ÏÂÔØ×ÖÄ»¡£
+ç”¨getsubä¸€æ­¥ä¸‹è½½å­—å¹•ã€‚
 
 
 
-## ÏÂÔØ
+## ä¸‹è½½
 
 
 `pip install getsub`
@@ -15,68 +15,69 @@
 
 
 
-## Ê¹ÓÃ
+## ä½¿ç”¨
 
 
-¼æÈÝpython2¡¢3
-
-
-
+å…¼å®¹python2ã€3
 
 
 
-**ÏÂÔØµ¥ÊÓÆµ×ÖÄ»**£º
+
+
+
+**ä¸‹è½½å•è§†é¢‘å­—å¹•**ï¼š
 
 ![single file](./pic/single.gif)
 
 
 
-**ÏÂÔØÒ»¸öÎÄ¼þ¼ÐÄÚµÄÊÓÆµÎÄ¼þ×ÖÄ»**£º
+**ä¸‹è½½ä¸€ä¸ªæ–‡ä»¶å¤¹å†…çš„è§†é¢‘æ–‡ä»¶å­—å¹•**ï¼š
 
 ![dir](./pic/dir.gif)
 
 
 
-`getsub` Ä¬ÈÏÎª×Ô¶¯ÏÂÔØ×ÖÄ»Ñ¹Ëõ°ü²¢´ÓÖÐÑ¡È¡ËüÈÏÎª×îºÏÊÊµÄ×ÖÄ»£¬Ò»°ãÊÇass¸ñÊ½¡¢Ë«Óï×ÖÄ»£¬ ¿ÉÒÔÌí¼Ó `-q` ²ÎÊýÀ´ÊÖ¶¯Ñ¡ÔñÏÂÔØµÄ×ÖÄ»Ñ¹Ëõ°ü¡£
+`getsub` é»˜è®¤ä¸ºè‡ªåŠ¨ä¸‹è½½å­—å¹•åŽ‹ç¼©åŒ…å¹¶ä»Žä¸­é€‰å–å®ƒè®¤ä¸ºæœ€åˆé€‚çš„å­—å¹•ï¼Œä¸€èˆ¬æ˜¯assæ ¼å¼ã€åŒè¯­å­—å¹•ï¼Œ å¯ä»¥æ·»åŠ  `-q` å‚æ•°æ¥æ‰‹åŠ¨é€‰æ‹©ä¸‹è½½çš„å­—å¹•åŽ‹ç¼©åŒ…ã€‚
 
-Python2ÏÂÒòÎª±àÂëÔ­Òò²Â²âÑ¹Ëõ°üÖÐ×ÖÄ»²»×¼È·£¬¿ÉÒÔÌí¼Ó `-s` ²ÎÊýÊÖ¶¯Ñ¡ÔñÑ¹Ëõ°üÖÐ×ÖÄ»¡£
+Python2ä¸‹å› ä¸ºç¼–ç åŽŸå› çŒœæµ‹åŽ‹ç¼©åŒ…ä¸­å­—å¹•ä¸å‡†ç¡®ï¼Œå¯ä»¥æ·»åŠ  `-s` å‚æ•°æ‰‹åŠ¨é€‰æ‹©åŽ‹ç¼©åŒ…ä¸­å­—å¹•ã€‚
 
 ![query](./pic/query.gif)
 
 
 
-**ËùÓÐ¿ÉÑ¡²ÎÊý**£º
+**æ‰€æœ‰å¯é€‰å‚æ•°**ï¼š
 
 ```
--h          °ïÖú
--q          ²éÑ¯Ä£Ê½£¬ÊÖ¶¯Ñ¡ÔñÏÂÔØµÄÑ¹Ëõ°ü£¬¶àÑ¡Ê¹ÓÃ','»ò'£¬'·Ö¸ô
--s          ÊÖ¶¯Ñ¡ÔñÏÂÔØÑ¹Ëõ°üÖÐÒª½âÑ¹µÄ×ÖÄ»
--o          ÈôÊÓÆµ´æÔÚÍ¬Ãû×ÖÄ»£¬Ìæ»»ÒÑ¾­´æÔÚµÄ×ÖÄ»
--m          ±£´æÔ­Ê¼ÏÂÔØ×ÖÄ»Ñ¹Ëõ°ü£¨Í¨³£Ò»¸ö×ÖÄ»Ñ¹Ëõ°üº¬ÓÐ¶à¸ö×ÖÄ»£©
--b          ÈôÒ»¸ö×ÖÄ¸Ñ¹Ëõ°üÄÚÍ¬Ê±ÓÐ .ass¡¢.srt ÀàÐÍ×ÖÄ»£¬±£´æÁ½ÖÖ×ÖÄ»
--n          ²éÑ¯Ä£Ê½ÏÂÏÔÊ¾×î´óºòÑ¡×ÖÄ»Êý
--d          Ñ¡ÔñÏÂÔØÆ÷£¬ÏÖÔÚÖ§³Ösubhd¡¢zimuzu
---debug     ÏÔÊ¾±¨´íÏêÏ¸ÐÅÏ¢
+-h          å¸®åŠ©
+-q          æŸ¥è¯¢æ¨¡å¼ï¼Œæ‰‹åŠ¨é€‰æ‹©ä¸‹è½½çš„åŽ‹ç¼©åŒ…ï¼Œå¤šé€‰ä½¿ç”¨','æˆ–'ï¼Œ'åˆ†éš”
+-s          æ‰‹åŠ¨é€‰æ‹©ä¸‹è½½åŽ‹ç¼©åŒ…ä¸­è¦è§£åŽ‹çš„å­—å¹•
+-o          è‹¥è§†é¢‘å­˜åœ¨åŒåå­—å¹•ï¼Œæ›¿æ¢å·²ç»å­˜åœ¨çš„å­—å¹•
+-m          ä¿å­˜åŽŸå§‹ä¸‹è½½å­—å¹•åŽ‹ç¼©åŒ…ï¼ˆé€šå¸¸ä¸€ä¸ªå­—å¹•åŽ‹ç¼©åŒ…å«æœ‰å¤šä¸ªå­—å¹•ï¼‰
+-b          è‹¥ä¸€ä¸ªå­—æ¯åŽ‹ç¼©åŒ…å†…åŒæ—¶æœ‰ .assã€.srt ç±»åž‹å­—å¹•ï¼Œä¿å­˜ä¸¤ç§å­—å¹•
+-n          æŸ¥è¯¢æ¨¡å¼ä¸‹æ˜¾ç¤ºæœ€å¤§å€™é€‰å­—å¹•æ•°
+-d          é€‰æ‹©ä¸‹è½½å™¨ï¼Œzimukuã€zimuzu
+--plex      åœ¨ä¸‹è½½å®Œæˆçš„å­—å¹•åä¸­æ’å…¥ .zh æ ‡è¯†ä¾› plex è¯†åˆ«ä¸ºä¸­æ–‡å­—å¹•
+--debug     æ˜¾ç¤ºæŠ¥é”™è¯¦ç»†ä¿¡æ¯
 ```
 
 
 
-## ËµÃ÷
+## è¯´æ˜Ž
 
-### ËÑË÷¹æÔò
+### æœç´¢è§„åˆ™
 
-`getsub`»á³éÈ¡ÊÓÆµÃûÖÐ°üº¬µÄÒ»ÏÂÐÅÏ¢½øÐÐ¶à´Î×éºÏËÑË÷£¬Ö±µ½ºòÑ¡×ÖÄ»°üÊý´ïµ½Éè¶¨Öµ£¨Ä¬ÈÏÎª10Ìõ£¬¿ÉÒÔÍ¨¹ý `-n` ²ÎÊýÉè¶¨£©¡£
+`getsub`ä¼šæŠ½å–è§†é¢‘åä¸­åŒ…å«çš„ä¸€ä¸‹ä¿¡æ¯è¿›è¡Œå¤šæ¬¡ç»„åˆæœç´¢ï¼Œç›´åˆ°å€™é€‰å­—å¹•åŒ…æ•°è¾¾åˆ°è®¾å®šå€¼ï¼ˆé»˜è®¤ä¸º10æ¡ï¼Œå¯ä»¥é€šè¿‡ `-n` å‚æ•°è®¾å®šï¼‰ã€‚
 
-- ÃÀ¾çÃû£¨µçÓ°Ãû£©
-- ¾ç¼¯ÐÅÏ¢£¨ÃÀ¾ç£©
-- Äê·Ý£¨µçÓ°£©
-- ·Ö±æÂÊ
-- ÊÓÆµ¸ñÊ½
-- ÒôÆµ±àÂë¸ñÊ½
-- Ñ¹ÖÆ×éÐÅÏ¢
+- ç¾Žå‰§åï¼ˆç”µå½±åï¼‰
+- å‰§é›†ä¿¡æ¯ï¼ˆç¾Žå‰§ï¼‰
+- å¹´ä»½ï¼ˆç”µå½±ï¼‰
+- åˆ†è¾¨çŽ‡
+- è§†é¢‘æ ¼å¼
+- éŸ³é¢‘ç¼–ç æ ¼å¼
+- åŽ‹åˆ¶ç»„ä¿¡æ¯
 
 
-ÈçÊÓÆµÃûÎª `Game.of.Thrones.s07e01.1080p.web.h264-tbs.mkv`£¬ ËùÓÐ×éºÏÈçÏÂ£¬°´ËÑË÷Ë³ÐòÏÈºóÅÅÁÐ£º
+å¦‚è§†é¢‘åä¸º `Game.of.Thrones.s07e01.1080p.web.h264-tbs.mkv`ï¼Œ æ‰€æœ‰ç»„åˆå¦‚ä¸‹ï¼ŒæŒ‰æœç´¢é¡ºåºå…ˆåŽæŽ’åˆ—ï¼š
 
 ```
 Game of Thrones s07 e01 1080p WEB-DL tbs
@@ -87,7 +88,7 @@ Game of Thrones s07
 Game of Thrones
 ```
 
-ÈçÊÓÆµÃûÎª `The.Notebook.2004.720p.BluRay.x264.AC3.3Audio-HDWinG.mkv`£¬ ËùÓÐ×éºÏÈçÏÂ£¬°´ËÑË÷Ë³ÐòÏÈºóÅÅÁÐ£º
+å¦‚è§†é¢‘åä¸º `The.Notebook.2004.720p.BluRay.x264.AC3.3Audio-HDWinG.mkv`ï¼Œ æ‰€æœ‰ç»„åˆå¦‚ä¸‹ï¼ŒæŒ‰æœç´¢é¡ºåºå…ˆåŽæŽ’åˆ—ï¼š
 
 ```
 The Notebook 2004 720p BluRay 3Audio-HDWinG 
@@ -99,33 +100,33 @@ The NoteBook
 
 
 
-**±ê×¼ÊÓÆµÃû**£º
+**æ ‡å‡†è§†é¢‘å**ï¼š
 
-È«Ó¢ÎÄ×é³É£¬°üº¬ÃÀ¾çÃû£¨µçÓ°Ãû£©£¬ ·Ö±æÂÊ£¬ ÊÓÆµ¸ñÊ½£¬ ÒôÆµ±àÂë¸ñÊ½£¬ Ñ¹ÖÆ×éµÈÐÅÏ¢¡£
+å…¨è‹±æ–‡ç»„æˆï¼ŒåŒ…å«ç¾Žå‰§åï¼ˆç”µå½±åï¼‰ï¼Œ åˆ†è¾¨çŽ‡ï¼Œ è§†é¢‘æ ¼å¼ï¼Œ éŸ³é¢‘ç¼–ç æ ¼å¼ï¼Œ åŽ‹åˆ¶ç»„ç­‰ä¿¡æ¯ã€‚
 
-Èç£º `Game.of.Thrones.s07e01.1080p.web.h264-tbs.mkv` £¬ `T2_ Trainspotting (1080p HD).mp4`
+å¦‚ï¼š `Game.of.Thrones.s07e01.1080p.web.h264-tbs.mkv` ï¼Œ `T2_ Trainspotting (1080p HD).mp4`
 
-**ÆäÓàÊÓÆµÃû**£º
+**å…¶ä½™è§†é¢‘å**ï¼š
 
-ÆäÓàÒ»°ãÎª°üº¬ÁËÖÐÎÄµÄÊÓÆµÃû¡£
+å…¶ä½™ä¸€èˆ¬ä¸ºåŒ…å«äº†ä¸­æ–‡çš„è§†é¢‘åã€‚
 
-¶ÔÓÚ°üº¬ÖÐÎÄµÄÊÓÆµÃû£º
+å¯¹äºŽåŒ…å«ä¸­æ–‡çš„è§†é¢‘åï¼š
 
-- ÈôÊÓÆµÃûµÄÃÀ¾çÃû£¨µçÓ°Ãû£©ÖÐÖÐÎÄ×ÖÊý´óÓÚÓ¢ÎÄ×ÖÊý£¬Ñ¡È¡ÖÐÎÄ×÷ÎªÊÓÆµµÄtitle
-- ÈôÊÓÆµÃûµÄÃÀ¾çÃû£¨µçÓ°Ãû£©ÖÐÓ¢ÎÄ×ÖÊý´óÓÚµÈÓÚÖÐÎÄ×ÖÊý£¬Ñ¡È¡Ó¢ÎÄ×÷ÎªÊÓÆµµÄtitle
+- è‹¥è§†é¢‘åçš„ç¾Žå‰§åï¼ˆç”µå½±åï¼‰ä¸­ä¸­æ–‡å­—æ•°å¤§äºŽè‹±æ–‡å­—æ•°ï¼Œé€‰å–ä¸­æ–‡ä½œä¸ºè§†é¢‘çš„title
+- è‹¥è§†é¢‘åçš„ç¾Žå‰§åï¼ˆç”µå½±åï¼‰ä¸­è‹±æ–‡å­—æ•°å¤§äºŽç­‰äºŽä¸­æ–‡å­—æ•°ï¼Œé€‰å–è‹±æ–‡ä½œä¸ºè§†é¢‘çš„title
 
-ÆäÖÐÈôÃû³ÆÖÐÓ¢»ìºÏ£¬Ö»ÄÜ×÷¼òµ¥¹ýÂËÖÐÎÄ£¨Ó¢ÎÄ£©×Ö·û¡£
+å…¶ä¸­è‹¥åç§°ä¸­è‹±æ··åˆï¼Œåªèƒ½ä½œç®€å•è¿‡æ»¤ä¸­æ–‡ï¼ˆè‹±æ–‡ï¼‰å­—ç¬¦ã€‚
 
-ÈôÊÓÆµÃûÎª `[SPSÐÁÆÕÉ­Ò»¼Ò×ÖÄ»×é].[³óÂªµÄÃÀ¹úÈË.µÚÒ»¼¾].Ugly.Amricans.S01E01.rmvb` ÕâÀà£¬ ÎÞ·¨³éÈ¡×¼È·µÄÃû³Æ¡£
+è‹¥è§†é¢‘åä¸º `[SPSè¾›æ™®æ£®ä¸€å®¶å­—å¹•ç»„].[ä¸‘é™‹çš„ç¾Žå›½äºº.ç¬¬ä¸€å­£].Ugly.Amricans.S01E01.rmvb` è¿™ç±»ï¼Œ æ— æ³•æŠ½å–å‡†ç¡®çš„åç§°ã€‚
 
 
 
-### ÏÂÔØÀ´Ô´
+### ä¸‹è½½æ¥æº
 
-¹ØÓÚÏÂÔØÀ´Ô´£¬ÏÖÔÚÊ×Ñ¡ÊÇ´Ó[zimuzu](http://www.zimuzu.tv/)ÏÂÔØ×ÖÄ»£¬ÈôËÑË÷½á¹ûÊýÌ«ÉÙ£¬»á¼ÌÐøËÑË÷[subhd](http://subhd.com)µÄ×ÖÄ»¡£
+å…³äºŽä¸‹è½½æ¥æºï¼ŒçŽ°åœ¨é¦–é€‰æ˜¯ä»Ž[zimuzu](http://www.zimuzu.tv/)ä¸‹è½½å­—å¹•ï¼Œè‹¥æœç´¢ç»“æžœæ•°å¤ªå°‘ï¼Œä¼šç»§ç»­æœç´¢[~~subhd~~](http://subhd.com)ã€[zimuku](https://www.zimuku.cn/)çš„å­—å¹•ã€‚
 
-¹ØÓÚÏÂÔØÆµÂÊ£¬zimuzuÄ¿Ç°Ã»ÓÐÃ÷ÏÔµÄÏÂÔØÆµÂÊÏÞÖÆ£¬ÍÏÈëÒ»¸öÊÓÆµÎÄ¼þ¼ÐÏÂÔØÒ»°ã²»»á±¨´í¡£¶øsubhdÓÐÏÂÔØÆµÂÊÏÞÖÆ£¬Ò»°ãÃ¿´ÎÖ»ÄÜÏÂÔØÒ»Á½¸öÊÓÆµµÄ×ÖÄ»£¬Ö®ºóÐèÒª»¬¶¯ÑéÖ¤ÂëÑéÖ¤¡£
+å…³äºŽä¸‹è½½é¢‘çŽ‡ï¼Œzimuzu ä¸Ž zimuku ç›®å‰éƒ½æ²¡æœ‰æ˜Žæ˜¾çš„ä¸‹è½½é¢‘çŽ‡é™åˆ¶ï¼Œæ‹–å…¥ä¸€ä¸ªè§†é¢‘æ–‡ä»¶å¤¹ä¸‹è½½ä¸€èˆ¬ä¸ä¼šæŠ¥é”™ã€‚~~è€Œsubhdæœ‰ä¸‹è½½é¢‘çŽ‡é™åˆ¶ï¼Œä¸€èˆ¬æ¯æ¬¡åªèƒ½ä¸‹è½½ä¸€ä¸¤ä¸ªè§†é¢‘çš„å­—å¹•ï¼Œä¹‹åŽéœ€è¦æ»‘åŠ¨éªŒè¯ç éªŒè¯ã€‚~~
 
-ÈôÏÂÔØ³öÏÖunknown error£¬¿ÉÄÜ¾ÍÊÇÏÂÔØÆµÂÊ¹ý¸ß£¬¿ÉÒÔµÈÒ»¶ÎÊ±¼äÔÙÊÔ¡£
+~~è‹¥ä¸‹è½½å‡ºçŽ°unknown errorï¼Œå¯èƒ½å°±æ˜¯ä¸‹è½½é¢‘çŽ‡è¿‡é«˜ï¼Œå¯ä»¥ç­‰ä¸€æ®µæ—¶é—´å†è¯•ã€‚~~
 
 
