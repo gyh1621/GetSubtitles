@@ -210,8 +210,6 @@ class ZimukuDownloader(object):
         else:
             datatype = 'Unknown'
 
-        with open('test.zip', 'wb') as f:
-            f.write(sub_data_bytes)
         return datatype, sub_data_bytes
 
 

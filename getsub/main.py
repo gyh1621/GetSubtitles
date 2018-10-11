@@ -231,7 +231,7 @@ class GetSubtitles(object):
             若没有符合字幕，查询模式下返回第一条字幕， 否则返回None """
 
         if not sublist:
-            print(prefix + ' Warn: ' + 'no subtitle in this archive')
+            print(prefix + ' warn: ' + 'no subtitle in this archive')
             return None
 
         video_name = video_info['title'].lower()
@@ -583,6 +583,11 @@ class GetSubtitles(object):
                         sub_dict.update(
                             downloader.get_subtitles(tuple(keywords))
                         )
+                    except ValueError as e:
+                        if str(e) == 'Zimuku搜索结果出现未知结构页面':
+                            print(prefix + ' warn: ' + str(e))
+                        else:
+                            raise(e)
                     except (exceptions.Timeout, exceptions.ConnectionError):
                         print(prefix + ' connect timeout, search next site.')
                         if i < (len(self.downloader)-1):
