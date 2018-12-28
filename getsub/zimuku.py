@@ -2,6 +2,10 @@
 #coding: utf-8
 
 from __future__ import print_function
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
 from contextlib import closing
 from collections import OrderedDict as order_dict
 
@@ -149,6 +153,7 @@ class ZimukuDownloader(object):
                         type_score += 8
                 sub_info['lan'] = type_score
                 download_link = bs_obj.find('a', {'id': 'down1'}).attrs['href']
+                download_link = urljoin(self.site_url, download_link)
                 r = s.get(download_link, timeout=60)
                 bs_obj = BeautifulSoup(r.text, 'html.parser')
                 download_link = bs_obj.find('a', {'rel': 'nofollow'})

@@ -13,7 +13,7 @@ setup(
     install_requires=[    # 依赖列表
         'requests>=2.0',
         'bs4>=0.0.1',
-        'guessit>=2.1',
+        'guessit==3.0.3',
         'rarfile>=3.0',
         'backports.shutil-get-terminal-size>=1.0'
     ],
