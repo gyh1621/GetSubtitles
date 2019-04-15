@@ -99,7 +99,7 @@ class GetSubtitles(object):
                             )
                         )
                     )
-                    video_dict[one_name] = {'path': root,
+                    video_dict[one_name] = {'path': os.path.abspath(root),
                                             'have_subtitle': sub_exists}
 
         elif os.path.isabs(mix_str):  # 视频绝对路径
