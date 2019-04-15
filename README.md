@@ -123,7 +123,8 @@ The NoteBook
 
 ### 下载来源
 
-关于下载来源，现在首选是从[zimuzu](http://www.zimuzu.tv/)下载字幕，若搜索结果数太少，会继续搜索[~~subhd~~](http://subhd.com)、[zimuku](https://www.zimuku.cn/)的字幕。
+
+关于下载来源，现在首选是从[subhd](http://subhd.com)下载字幕，若搜索结果数太少，会继续搜索[zimuzu](http://www.zimuzu.tv/)、[zimuku](https://www.zimuku.la/)的字幕。
 
 关于下载频率，zimuzu 与 zimuku 目前都没有明显的下载频率限制，拖入一个视频文件夹下载一般不会报错。~~而subhd有下载频率限制，一般每次只能下载一两个视频的字幕，之后需要滑动验证码验证。~~
 
