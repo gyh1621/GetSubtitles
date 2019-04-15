@@ -17,7 +17,7 @@ from requests import exceptions
 
 from getsub.__version__ import __version__
 from getsub.sys_global_var import py, prefix
-# from subhd import SubHDDownloader
+from getsub.subhd import SubHDDownloader
 from getsub.zimuzu import ZimuzuDownloader
 from getsub.zimuku import ZimukuDownloader
 
@@ -39,6 +39,9 @@ class GetSubtitles(object):
                                   '.mpe', '.mpv', '.mpg', '.m2v', '.svi',
                                   '.3gp', '.3g2', '.mxf', '.roq', '.nsv',
                                   '.flv', '.f4v', '.f4p', '.f4a', '.f4b']
+        self.service_short_names = {
+            'amazon prime': 'amzn'
+        }
         self.sub_format_list = ['.ass', '.srt', '.ssa', '.sub']
         self.support_file_list = ['.zip', '.rar']
         self.arg_name = name
@@ -53,21 +56,21 @@ class GetSubtitles(object):
         self.debug = debug
         self.s_error = ''
         self.f_error = ''
-        # self.subhd = SubHDDownloader()
+        self.subhd = SubHDDownloader()
         self.zimuzu = ZimuzuDownloader()
         self.zimuku = ZimukuDownloader()
         if not downloader:
-            self.downloader = [self.zimuzu, self.zimuku]
-        # elif downloader == 'subhd':
-        #     self.downloader = [self.subhd]
+            self.downloader = [self.subhd, self.zimuzu, self.zimuku]
+        elif downloader == 'subhd':
+            self.downloader = [self.subhd]
         elif downloader == 'zimuzu':
             self.downloader = [self.zimuzu]
         elif downloader == 'zimuku':
             self.downloader = [self.zimuku]
         else:
-            # print("no such downloader, "
-            #       "please choose from 'subhd','zimuzu' and 'zimuku'")
-            print("no such downloader, please choose from 'zimuzu' and 'zimuku'")
+            print("no such downloader, "
+                  "please choose from 'subhd','zimuzu' and 'zimuku'")
+            #print("no such downloader, please choose from 'zimuzu' and 'zimuku'")
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
 
     def get_path_name(self, args):
@@ -170,6 +173,11 @@ class GetSubtitles(object):
             keywords.append(info_dict['format'])
         if info_dict.get('release_group'):
             keywords.append(info_dict['release_group'])
+        if info_dict.get('streaming_service'):
+            service_name = info_dict['streaming_service']
+            short_names = self.service_short_names.get(service_name.lower())
+            if short_names:
+                keywords.append(short_names)
         return keywords, info_dict
 
     def choose_subtitle(self, sub_dict):
@@ -500,15 +508,15 @@ class GetSubtitles(object):
             datatype, sub_data_bytes = self.zimuzu.download_file(
                 sub_choice, link
             )
-        # elif '[SUBHD]' in sub_choice:
-        #     datatype, sub_data_bytes, msg = self.subhd. \
-        #         download_file(sub_choice, link)
-        #     if msg == 'false':
-        #         print(prefix + ' error: '
-        #                        'download too frequently '
-        #                        'with subhd downloader, '
-        #                        'please change to other downloaders')
-        #         return
+        elif '[SUBHD]' in sub_choice:
+            datatype, sub_data_bytes, msg = self.subhd. \
+                download_file(sub_choice, link)
+            if msg == 'false':
+                print(prefix + ' error: '
+                               'download too frequently '
+                               'with subhd downloader, '
+                               'please change to other downloaders')
+                return
         elif '[ZIMUKU]' in sub_choice:
             datatype, sub_data_bytes = self.zimuku.download_file(
                 sub_choice, link, session=session

@@ -31,8 +31,8 @@ class ZimukuDownloader(object):
             "Accept": "text/html,application/xhtml+xml,\
                         application/xml;q=0.9,image/webp,*/*;q=0.8"
         }
-        self.site_url = 'http://www.zimuku.cn'
-        self.search_url = 'http://www.zimuku.cn/search?q='
+        self.site_url = 'http://www.zimuku.la'
+        self.search_url = 'http://www.zimuku.la/search?q='
 
     def get_subtitles(self, keywords, sub_num=10):
 
@@ -45,7 +45,7 @@ class ZimukuDownloader(object):
         keywords.insert(0, info['title'])
         if info.get('season'):
             season = str(info['season']).zfill(2)
-            keywords.insert(1, season)
+            keywords.insert(1, 's' + season)
 
         sub_dict = order_dict()
         s = requests.session()
@@ -158,6 +158,7 @@ class ZimukuDownloader(object):
                 bs_obj = BeautifulSoup(r.text, 'html.parser')
                 download_link = bs_obj.find('a', {'rel': 'nofollow'})
                 download_link = download_link.attrs['href']
+                download_link = urljoin(self.site_url, download_link)
                 sub_info['link'] = download_link
             else:
                 # 射手字幕页面

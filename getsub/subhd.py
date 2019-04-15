@@ -2,6 +2,7 @@
 # !/usr/bin/env python3
 
 from __future__ import print_function
+import time
 import json
 import re
 from contextlib import closing
@@ -10,8 +11,8 @@ from collections import OrderedDict as order_dict
 import requests
 from bs4 import BeautifulSoup
 
-from sys_global_var import py, prefix
-from progress_bar import ProgressBar
+from .sys_global_var import py, prefix
+from .progress_bar import ProgressBar
 
 
 ''' SubHD 字幕下载器
@@ -61,12 +62,15 @@ class SubHDDownloader(object):
                     small_text = bs_obj.find('small').text.encode('utf8')
                 else:
                     small_text = bs_obj.find('small').text
-            except AttributeError:
+            except AttributeError as e:
                 char_error = 'The URI you submitted has disallowed characters'
                 if char_error in bs_obj.text:
                     print(prefix + ' [SUBHD ERROR] '
                           + char_error + ': ' + keyword)
                     return None
+                # 搜索验证按钮
+                time.sleep(2)
+                continue
 
             if '总共 0 条' not in small_text:
                 for one_box in bs_obj.find_all('div', {'class': 'box'}):
@@ -102,7 +106,7 @@ class SubHDDownloader(object):
             # 第一个候选字幕没有双语
             sub_dict = order_dict(
                 sorted(sub_dict.items(),
-                       key=lambda e: e[1]['lan'], reverse=True)
+                       key=lambda e: e[1]['lan'], reverse=False)
             )
         return sub_dict
 
@@ -111,9 +115,12 @@ class SubHDDownloader(object):
         """ 传入字幕页面链接， 字幕包标题， 返回压缩包类型，压缩包字节数据 """
 
         sid = sub_url.split('/')[-1]
+        r = requests.get(sub_url, headers=self.headers)
+        bs_obj = BeautifulSoup(r.text, 'html.parser')
+        dtoken = bs_obj.find('button', {'id': 'down'})['dtoken']
 
         r = requests.post('http://subhd.com/ajax/down_ajax',
-                          data={'sub_id': sid},
+                          data={'sub_id': sid, 'dtoken': dtoken},
                           headers=self.headers)
 
         content = r.content.decode('unicode-escape')
