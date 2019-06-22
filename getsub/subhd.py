@@ -28,8 +28,8 @@ class SubHDDownloader(object):
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,\
                             image/webp,*/*;q=0.8"
         }
-        self.site_url = 'http://subhd.com'
-        self.search_url = 'http://subhd.com/search/'
+        self.site_url = 'http://subhd.tv'
+        self.search_url = 'http://subhd.tv/search/'
 
     def get_subtitles(self, keywords, sub_num=5):
 
@@ -119,7 +119,7 @@ class SubHDDownloader(object):
         bs_obj = BeautifulSoup(r.text, 'html.parser')
         dtoken = bs_obj.find('button', {'id': 'down'})['dtoken']
 
-        r = requests.post('http://subhd.com/ajax/down_ajax',
+        r = requests.post(self.site_url + '/ajax/down_ajax',
                           data={'sub_id': sid, 'dtoken': dtoken},
                           headers=self.headers)
 
