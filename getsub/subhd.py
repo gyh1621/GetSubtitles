@@ -28,8 +28,8 @@ class SubHDDownloader(object):
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,\
                             image/webp,*/*;q=0.8"
         }
-        self.site_url = 'http://subhd.tv'
-        self.search_url = 'http://subhd.tv/search/'
+        self.site_url = 'https://subhd.tv'
+        self.search_url = 'https://subhd.tv/search/'
 
     def get_subtitles(self, keywords, sub_num=5):
 
