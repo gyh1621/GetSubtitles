@@ -12,7 +12,7 @@ setup(
     packages=find_packages(),
     install_requires=[    # 依赖列表
         'requests>=2.0',
-        'bs4>=0.0.1',
+        'bs4>=4.4.0',
         'guessit==3.0.3',
         'rarfile>=3.0',
         'backports.shutil-get-terminal-size>=1.0'

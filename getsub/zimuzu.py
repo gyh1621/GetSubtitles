@@ -3,6 +3,7 @@
 from __future__ import print_function
 from collections import OrderedDict as order_dict
 from contextlib import closing
+import json
 
 import requests
 from bs4 import BeautifulSoup
@@ -89,10 +90,12 @@ class ZimuzuDownloader(object):
         bs_obj = BeautifulSoup(r.text, 'html.parser')
         a = bs_obj.find('div', {'class': 'subtitle-links'}).a
         download_link = a.attrs['href']
-        r = s.get(download_link, headers=self.headers)
-        bs_obj = BeautifulSoup(r.text, 'html.parser')
-        a = bs_obj.find('div', {'class': 'download-box'}).a
-        download_link = a.attrs['href']
+        self.headers['Referer'] = download_link
+        ajax_url = 'http://got001.com/api/v1/static/subtitle/detail?'
+        ajax_url += download_link.split('?')[-1]
+        r = s.get(ajax_url, headers=self.headers)
+        json_obj = json.loads(r.text)
+        download_link = json_obj['data']['info']['file']
 
         try:
             with closing(requests.get(download_link, stream=True)) as response:
