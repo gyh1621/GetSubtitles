@@ -30,7 +30,7 @@ class GetSubtitles(object):
         output_encode = 'utf8'
 
     def __init__(self, name, query, single,
-                 more, both, over, plex, debug, sub_num, downloader):
+                 more, both, over, plex, debug, sub_num, downloader, sub_path):
         self.video_format_list = ['.webm', '.mkv', '.flv', '.vob', '.ogv',
                                   '.ogg', '.drc', '.gif', '.gifv', '.mng',
                                   '.avi', '.mov', '.qt', '.wmv', '.yuv',
@@ -45,6 +45,7 @@ class GetSubtitles(object):
         self.sub_format_list = ['.ass', '.srt', '.ssa', '.sub']
         self.support_file_list = ['.zip', '.rar']
         self.arg_name = name
+        self.sub_store_path = sub_path
         self.both = both
         self.query, self.single = query, single
         self.more, self.over = more, over
@@ -73,13 +74,25 @@ class GetSubtitles(object):
             #print("no such downloader, please choose from 'zimuzu' and 'zimuku'")
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
 
-    def get_path_name(self, args):
+    def get_path_name(self, args, args1):
 
         """ 传入输入的视频名称或路径,
             构造一个包含视频路径和是否存在字幕信息的字典返回。
             video_dict: {'path': path, 'have_subtitle': sub_exists} """
 
         mix_str = args.replace('"', '')
+        if args1:
+            store_path = args1.replace('"', '')
+        else:
+            store_path = ''
+        specified_path = 0
+        store_path_files = []
+        if not os.path.isdir(store_path):
+            print('no specfied or invalid output path,download sub file to video file location.')
+        else:
+            specified_path = 1
+            for root, dirs, files in os.walk(store_path):
+                store_path_files.extend(files)
         video_dict = order_dict()
         if os.path.isdir(mix_str):  # 一个文件夹
             for root, dirs, files in os.walk(mix_str):
@@ -89,37 +102,71 @@ class GetSubtitles(object):
                     if suffix not in self.video_format_list:
                         continue
                     v_name_no_format = os.path.splitext(one_name)[0]
-                    sub_exists = max(
-                        list(
-                            map(
-                                lambda sub_type:
-                                    int(v_name_no_format + sub_type in files
-                                        or v_name_no_format + '.zh' + sub_type in files),
-                                    self.sub_format_list
+                    if specified_path == 0:
+                        sub_exists = max(
+                            list(
+                                map(
+                                    lambda sub_type:
+                                        int(v_name_no_format + sub_type in files
+                                            or v_name_no_format + '.zh' + sub_type in files),
+                                        self.sub_format_list
+                                )
                             )
                         )
-                    )
-                    video_dict[one_name] = {'path': os.path.abspath(root),
-                                            'have_subtitle': sub_exists}
+                        video_dict[one_name] = {'path': os.path.abspath(root),
+                                                'have_subtitle': sub_exists}
+                    else:
+                        sub_exists = max(
+                            list(
+                                map(
+                                    lambda sub_type:
+                                        int(v_name_no_format + sub_type in store_path_files
+                                            or v_name_no_format + '.zh' + sub_type in store_path_files),
+                                        self.sub_format_list
+                                )
+                            )
+                        )
+                        video_dict[one_name] = {'path': os.path.abspath(store_path),
+                                                'have_subtitle': sub_exists}
 
         elif os.path.isabs(mix_str):  # 视频绝对路径
             v_path, v_name = os.path.split(mix_str)
             v_name_no_format = os.path.splitext(v_name)[0]
-            sub_exists = max(
-                list(
-                    map(
-                        lambda sub_type:
-                            os.path.exists(
-                                os.path.join(v_path, v_name_no_format+sub_type)
-                            ),
-                            self.sub_format_list
+            if specified_path == 1:
+                s_path = os.path.abspath(store_path)
+            if specified_path == 0:
+                sub_exists = max(
+                    list(
+                        map(
+                            lambda sub_type:
+                                os.path.exists(
+                                    os.path.join(v_path, v_name_no_format+sub_type)
+                                ),
+                                self.sub_format_list
+                        )
                     )
                 )
-            )
-            video_dict[v_name] = {'path': os.path.dirname(mix_str),
-                                  'have_subtitle': sub_exists}
+                video_dict[v_name] = {'path': os.path.dirname(mix_str),
+                                    'have_subtitle': sub_exists}
+            else:
+                sub_exists = max(
+                    list(
+                        map(
+                            lambda sub_type:
+                                os.path.exists(
+                                    os.path.join(s_path, v_name_no_format+sub_type)
+                                ),
+                                self.sub_format_list
+                        )
+                    )
+                )
+                video_dict[v_name] = {'path': s_path,
+                                    'have_subtitle': sub_exists}
         else:  # 单个视频名字，无路径
-            video_dict[mix_str] = {'path': os.getcwd(), 'have_subtitle': 0}
+            if specified_path == 0:
+                video_dict[mix_str] = {'path': os.getcwd(), 'have_subtitle': 0}
+            else:
+                video_dict[mix_str] = {'path': os.path.abspath(store_path), 'have_subtitle': 0}
         return video_dict
 
     def sort_keyword(self, name):
@@ -164,11 +211,11 @@ class GetSubtitles(object):
         #    base_keyword += (' ' + str(info_dict['year']))  # 若为电影添加年份
         if info_dict.get('season'):
             base_keyword += (' s%s' % str(info_dict['season']).zfill(2))
-        keywords.append(base_keyword)
         if info_dict.get('episode'):
-            keywords.append(' e%s' % str(info_dict['episode']).zfill(2))
-        if info_dict.get('screen_size'):
-            keywords.append(str(info_dict['screen_size']))
+            base_keyword += ('e%s' % str(info_dict['episode']).zfill(2))
+        keywords.append(base_keyword)
+        #if info_dict.get('screen_size'):
+        #    keywords.append(str(info_dict['screen_size']))
         if info_dict.get('format'):
             keywords.append(info_dict['format'])
         if info_dict.get('release_group'):
@@ -296,7 +343,8 @@ class GetSubtitles(object):
                 if '繁体' in one_sub or 'cht' in one_sub or '.big5.' in one_sub:
                     score[-1] += 3
                 if '中英' in one_sub or '简英' in one_sub or '双语' in one_sub \
-                        or 'chs&eng' in one_sub or '简体&英文' in one_sub:
+                        or 'chs.eng' in one_sub or 'chs&eng' in one_sub \
+                        or '简体&英文' in one_sub:
                     score[-1] += 7
             # py2 strange decode error, happens time to time
             except UnicodeDecodeError:
@@ -310,6 +358,7 @@ class GetSubtitles(object):
                         or '简英'.decode('utf8') in one_sub \
                         or '双语'.decode('utf8') in one_sub \
                         or '简体&英文'.decode('utf8') in one_sub \
+                        or 'chs.eng'.decode('utf8') in one_sub \
                         or 'chs&eng' in one_sub:
                     score[-1] += 7
 
@@ -568,7 +617,7 @@ class GetSubtitles(object):
 
     def start(self):
 
-        all_video_dict = self.get_path_name(self.arg_name)
+        all_video_dict = self.get_path_name(self.arg_name, self.sub_store_path)
 
         for one_video, video_info in all_video_dict.items():
 
@@ -701,6 +750,12 @@ def main():
         help="the video's name or full path or a dir with videos"
     )
     arg_parser.add_argument(
+        '-p',
+        '--directory',
+        action='store',
+        help='set specified subtitle download path'
+    )
+    arg_parser.add_argument(
         '-q',
         '--query',
         action='store_true',
@@ -759,9 +814,10 @@ def main():
     if args.over:
         print('\nThe script will replace the old subtitles if exist...\n')
 
+
     GetSubtitles(args.name, args.query, args.single, args.more,
                  args.both, args.over, args.plex, args.debug, sub_num=args.number,
-                 downloader=args.downloader).start()
+                 downloader=args.downloader, sub_path=args.directory,).start()
 
 
 if __name__ == '__main__':
