@@ -13,7 +13,7 @@ setup(
     install_requires=[    # 依赖列表
         'requests>=2.0',
         'beautifulsoup4>=4.4.0',
-        'guessit==3.0.3',
+        'guessit==3.1.0',
         'rarfile>=3.0',
         'backports.shutil-get-terminal-size>=1.0'
     ],
