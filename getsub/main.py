@@ -85,12 +85,10 @@ class GetSubtitles(object):
             store_path = args1.replace('"', '')
         else:
             store_path = ''
-        specified_path = 0
         store_path_files = []
         if not os.path.isdir(store_path):
-            print('no specfied or invalid output path,download sub file to video file location.')
+            print('no valid path specfied,download sub file to video file location.')
         else:
-            specified_path = 1
             for root, dirs, files in os.walk(store_path):
                 store_path_files.extend(files)
         video_dict = order_dict()
@@ -102,68 +100,41 @@ class GetSubtitles(object):
                     if suffix not in self.video_format_list:
                         continue
                     v_name_no_format = os.path.splitext(one_name)[0]
-                    if specified_path == 0:
-                        sub_exists = max(
-                            list(
-                                map(
-                                    lambda sub_type:
-                                        int(v_name_no_format + sub_type in files
-                                            or v_name_no_format + '.zh' + sub_type in files),
-                                        self.sub_format_list
-                                )
+                    sub_exists = max(
+                        list(
+                            map(
+                                lambda sub_type:
+                                    int(v_name_no_format + sub_type in files + store_path_files
+                                        or v_name_no_format + '.zh' + sub_type in files + store_path_files),
+                                    self.sub_format_list
                             )
                         )
-                        video_dict[one_name] = {'path': os.path.abspath(root),
-                                                'have_subtitle': sub_exists}
-                    else:
-                        sub_exists = max(
-                            list(
-                                map(
-                                    lambda sub_type:
-                                        int(v_name_no_format + sub_type in store_path_files
-                                            or v_name_no_format + '.zh' + sub_type in store_path_files),
-                                        self.sub_format_list
-                                )
-                            )
-                        )
-                        video_dict[one_name] = {'path': os.path.abspath(store_path),
-                                                'have_subtitle': sub_exists}
+                    )
+                    video_dict[one_name] = {'path': next(item for item in [store_path,os.path.abspath(root)] if item != ''),
+                                            'have_subtitle': sub_exists}
 
         elif os.path.isabs(mix_str):  # 视频绝对路径
             v_path, v_name = os.path.split(mix_str)
             v_name_no_format = os.path.splitext(v_name)[0]
-            if specified_path == 1:
+            if os.path.isdir(store_path):
                 s_path = os.path.abspath(store_path)
-            if specified_path == 0:
-                sub_exists = max(
-                    list(
-                        map(
-                            lambda sub_type:
-                                os.path.exists(
-                                    os.path.join(v_path, v_name_no_format+sub_type)
-                                ),
-                                self.sub_format_list
-                        )
-                    )
-                )
-                video_dict[v_name] = {'path': os.path.dirname(mix_str),
-                                    'have_subtitle': sub_exists}
             else:
-                sub_exists = max(
-                    list(
-                        map(
-                            lambda sub_type:
-                                os.path.exists(
-                                    os.path.join(s_path, v_name_no_format+sub_type)
-                                ),
-                                self.sub_format_list
-                        )
+                s_path = v_path
+            sub_exists = max(
+                list(
+                    map(
+                        lambda sub_type:
+                            os.path.exists(
+                                os.path.join(s_path, v_name_no_format+sub_type)
+                            ),
+                            self.sub_format_list
                     )
                 )
-                video_dict[v_name] = {'path': s_path,
-                                    'have_subtitle': sub_exists}
+            )
+            video_dict[v_name] = {'path': s_path,
+                                'have_subtitle': sub_exists}
         else:  # 单个视频名字，无路径
-            if specified_path == 0:
+            if not os.path.isdir(store_path):
                 video_dict[mix_str] = {'path': os.getcwd(), 'have_subtitle': 0}
             else:
                 video_dict[mix_str] = {'path': os.path.abspath(store_path), 'have_subtitle': 0}
@@ -211,11 +182,9 @@ class GetSubtitles(object):
         #    base_keyword += (' ' + str(info_dict['year']))  # 若为电影添加年份
         if info_dict.get('season'):
             base_keyword += (' s%s' % str(info_dict['season']).zfill(2))
-        if info_dict.get('episode'):
-            base_keyword += ('e%s' % str(info_dict['episode']).zfill(2))
         keywords.append(base_keyword)
-        #if info_dict.get('screen_size'):
-        #    keywords.append(str(info_dict['screen_size']))
+        if info_dict.get('episode'):
+            keywords.append(' e%s' % str(info_dict['episode']).zfill(2))
         if info_dict.get('format'):
             keywords.append(info_dict['format'])
         if info_dict.get('release_group'):
@@ -225,6 +194,8 @@ class GetSubtitles(object):
             short_names = self.service_short_names.get(service_name.lower())
             if short_names:
                 keywords.append(short_names)
+        if info_dict.get('screen_size'):
+            keywords.append(str(info_dict['screen_size']))
         return keywords, info_dict
 
     def choose_subtitle(self, sub_dict):
