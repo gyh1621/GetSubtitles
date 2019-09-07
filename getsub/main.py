@@ -88,6 +88,7 @@ class GetSubtitles(object):
         store_path_files = []
         if not os.path.isdir(store_path):
             print('no valid path specfied,download sub file to video file location.')
+            store_path = ''
         else:
             for root, dirs, files in os.walk(store_path):
                 store_path_files.extend(files)
