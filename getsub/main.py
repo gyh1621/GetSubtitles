@@ -314,10 +314,10 @@ class GetSubtitles(object):
                     score[-1] += 5
                 if '繁体' in one_sub or 'cht' in one_sub or '.big5.' in one_sub:
                     score[-1] += 3
-                if '中英' in one_sub or '简英' in one_sub or '双语' in one_sub \
-                        or 'chs.eng' in one_sub or 'chs&eng' in one_sub \
-                        or '简体&英文' in one_sub:
+                if 'chs.eng' in one_sub or 'chs&eng' in one_sub:
                     score[-1] += 7
+                if '中英' in one_sub or '简英' in one_sub or '双语' in one_sub or '简体&英文' in one_sub:
+                    score[-1] +=9
             # py2 strange decode error, happens time to time
             except UnicodeDecodeError:
                 if '简体'.decode('utf8') in one_sub \
@@ -326,13 +326,14 @@ class GetSubtitles(object):
                 if '繁体'.decode('utf8') in one_sub \
                         or 'cht' in one_sub or '.big5.' in one_sub:
                     score[-1] += 3
+                if 'chs.eng'.decode('utf8') in one_sub \
+                        or 'chs&eng' in one_sub:
+                    score[-1] += 7
                 if '中英'.decode('utf8') in one_sub \
                         or '简英'.decode('utf8') in one_sub \
                         or '双语'.decode('utf8') in one_sub \
-                        or '简体&英文'.decode('utf8') in one_sub \
-                        or 'chs.eng'.decode('utf8') in one_sub \
-                        or 'chs&eng' in one_sub:
-                    score[-1] += 7
+                        or '简体&英文'.decode('utf8') in one_sub:
+                    score[-1] += 9				
 
             score[-1] += ('ass' in one_sub or 'ssa' in one_sub) * 2
             score[-1] += ('srt' in one_sub) * 1
