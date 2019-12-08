@@ -67,7 +67,7 @@ class SubHDDownloader(object):
                 if char_error in bs_obj.text:
                     print(prefix + ' [SUBHD ERROR] '
                           + char_error + ': ' + keyword)
-                    return None
+                    return sub_dict
                 # 搜索验证按钮
                 time.sleep(2)
                 continue
