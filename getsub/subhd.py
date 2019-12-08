@@ -106,7 +106,7 @@ class SubHDDownloader(object):
             # 第一个候选字幕没有双语
             sub_dict = order_dict(
                 sorted(sub_dict.items(),
-                       key=lambda e: e[1]['lan'], reverse=False)
+                       key=lambda e: e[1]['lan'], reverse=True)
             )
         return sub_dict
 
