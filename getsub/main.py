@@ -14,6 +14,7 @@ from traceback import format_exc
 import chardet
 from guessit import guessit
 from requests import exceptions
+from requests.utils import quote
 
 from getsub.__version__ import __version__
 from getsub.sys_global_var import py, prefix
@@ -197,6 +198,9 @@ class GetSubtitles(object):
                 keywords.append(short_names)
         if info_dict.get('screen_size'):
             keywords.append(str(info_dict['screen_size']))
+
+        # 对关键字进行 URL 编码
+        keywords = [quote(_keyword) for _keyword in keywords]
         return keywords, info_dict
 
     def choose_subtitle(self, sub_dict):
