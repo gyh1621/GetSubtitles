@@ -212,11 +212,13 @@ class GetSubtitles(object):
             若为查询模式返回选择的字幕包名称，字幕包下载地址
             否则返回字幕字典第一个字幕包的名称，字幕包下载地址 """
 
+        exit = False
+
         if not self.query:
             chosen_sub = list(sub_dict.keys())[0]
             link = sub_dict[chosen_sub]['link']
             session = sub_dict[chosen_sub].get('session', None)
-            return [[chosen_sub, link, session]]
+            return exit, [[chosen_sub, link, session]]
 
         print(prefix, '%3s)  Exit. Not downloading any subtitles.' % 0)
         for i, key in enumerate(sub_dict.keys()):
@@ -249,7 +251,8 @@ class GetSubtitles(object):
                 print(prefix + '  Error: only numbers accepted')
                 continue
             if 0 in choices:
-                return []
+                exit = True
+                return exit, []
             for choice in choices:
                 if not choice - 1 in indexes:
                     print(prefix +
@@ -260,7 +263,7 @@ class GetSubtitles(object):
                     link = sub_dict[chosen_sub]['link']
                     session = sub_dict[chosen_sub].get('session', None)
                     chosen_subs.append([chosen_sub, link, session])
-        return chosen_subs
+        return exit, chosen_subs
 
     def guess_subtitle(self, sublist, video_info):
 
@@ -663,8 +666,8 @@ class GetSubtitles(object):
                 extract_sub_names = []
                 # 遍历字幕包直到有猜测字幕
                 while not extract_sub_names and len(sub_dict) > 0:
-                    sub_choices = self.choose_subtitle(sub_dict)
-                    if not sub_choices:
+                    exit, sub_choices = self.choose_subtitle(sub_dict)
+                    if exit:
                         break
                     for i, choice in enumerate(sub_choices):
                         sub_choice, link, session = choice
