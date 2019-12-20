@@ -217,6 +217,7 @@ class GetSubtitles(object):
             session = sub_dict[chosen_sub].get('session', None)
             return [[chosen_sub, link, session]]
 
+        print(prefix, '%3s)  Exit. Not downloading any subtitles.' % 0)
         for i, key in enumerate(sub_dict.keys()):
             if i == self.sub_num:
                 break
@@ -246,6 +247,8 @@ class GetSubtitles(object):
             except ValueError:
                 print(prefix + '  Error: only numbers accepted')
                 continue
+            if 0 in choices:
+                return []
             for choice in choices:
                 if not choice - 1 in indexes:
                     print(prefix +
@@ -649,6 +652,8 @@ class GetSubtitles(object):
                 # 遍历字幕包直到有猜测字幕
                 while not extract_sub_names and len(sub_dict) > 0:
                     sub_choices = self.choose_subtitle(sub_dict)
+                    if not sub_choices:
+                        break
                     for i, choice in enumerate(sub_choices):
                         sub_choice, link, session = choice
                         sub_dict.pop(sub_choice)
