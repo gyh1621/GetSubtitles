@@ -21,6 +21,7 @@ from getsub.sys_global_var import py, prefix
 from getsub.subhd import SubHDDownloader
 from getsub.zimuzu import ZimuzuDownloader
 from getsub.zimuku import ZimukuDownloader
+from getsub.py7z import Py7z
 
 
 class GetSubtitles(object):
@@ -44,7 +45,7 @@ class GetSubtitles(object):
             'amazon prime': 'amzn'
         }
         self.sub_format_list = ['.ass', '.srt', '.ssa', '.sub']
-        self.support_file_list = ['.zip', '.rar']
+        self.support_file_list = ['.zip', '.rar', '.7z']
         self.arg_name = name
         self.sub_store_path = sub_path
         self.both = both
@@ -375,6 +376,8 @@ class GetSubtitles(object):
                     sub_file_handler = zipfile.ZipFile(sub_buff, mode='r')
                 elif datatype == '.rar':
                     sub_file_handler = rarfile.RarFile(sub_buff, mode='r')
+                elif datatype == '.7z':
+                    sub_file_handler = Py7z(sub_buff)
                 sub_lists_dict.update(self.get_file_list(sub_file_handler))
 
         return sub_lists_dict
@@ -388,13 +391,22 @@ class GetSubtitles(object):
         sub_buff = BytesIO()
         sub_buff.write(sub_data_b)
 
+        if datatype == '.7z':
+            try:
+                sub_buff.seek(0)
+                file_handler = Py7z(sub_buff)
+            except:
+                # try with zipfile
+                datatype = '.zip'
         if datatype == '.zip':
             try:
+                sub_buff.seek(0)
                 file_handler = zipfile.ZipFile(sub_buff, mode='r')
             except:
                 # try with rarfile
                 datatype = '.rar'
         if datatype == '.rar':
+            sub_buff.seek(0)
             file_handler = rarfile.RarFile(sub_buff, mode='r')
 
         sub_lists_dict = dict()

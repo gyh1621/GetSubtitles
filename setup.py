@@ -15,7 +15,8 @@ setup(
         'beautifulsoup4>=4.4.0',
         'guessit==3.1.0',
         'rarfile>=3.0',
-        'backports.shutil-get-terminal-size>=1.0'
+        'backports.shutil-get-terminal-size>=1.0',
+        'pylzma==0.5.0'
     ],
     entry_points={
         'console_scripts': [
