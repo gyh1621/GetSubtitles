@@ -513,6 +513,13 @@ class GetSubtitles(object):
     def process_archive(self, one_video, video_info,
                         sub_choice, link, session,
                         info_dict, rename=True, delete=True):
+        """ 解压字幕包，返回字幕包中字幕名列表
+
+            Return:
+                message: str, 无其它错误则为空
+                extract_sub_names: list
+        """
+        message = ''
         if py == 2:
             encoding = chardet.detect(sub_choice)['encoding']
             if isinstance(sub_choice, str):
@@ -538,59 +545,60 @@ class GetSubtitles(object):
             datatype, sub_data_bytes, msg = self.subhd. \
                 download_file(sub_choice, link)
             if msg == 'false':
-                print(prefix + ' error: '
-                               'download too frequently '
-                               'with subhd downloader, '
-                               'please change to other downloaders')
-                return
+                message = 'download too frequently with subhd downloader,' + \
+                          ' please change to other downloaders'
+                return message, None
         elif '[ZIMUKU]' in sub_choice:
             datatype, sub_data_bytes = self.zimuku.download_file(
                 sub_choice, link, session=session
            )
         extract_sub_names = []
-        if datatype in self.support_file_list:
-            # 获得猜测字幕名称
-            # 查询模式必有返回值，自动模式无猜测值返回None
-            extract_sub_names = self.extract_subtitle(
-                one_video, video_info['path'],
-                sub_choice, datatype, sub_data_bytes, info_dict,
-                rename, self.single, self.both, self.plex, delete=delete
-            )
-            if not extract_sub_names:
-                return None
-            for extract_sub_name, extract_sub_type in extract_sub_names:
-                extract_sub_name = extract_sub_name.split('/')[-1]
-                try:
-                    # zipfile: Historical ZIP filename encoding
-                    # try cp437 encoding
-                    extract_sub_name = extract_sub_name. \
-                        encode('cp437').decode('gbk')
-                except:
-                    pass
-                try:
-                    if py == 2:
-                        if isinstance(extract_sub_name, str):
-                            encoding = chardet. \
-                                detect(extract_sub_name)
-                            encoding = encoding['encoding']
-                            # reason of adding windows-1251 check:
-                            # using ZIMUZU downloader
-                            # I.Robot.2004.1080p.Bluray.x264.DTS-DEFiNiTE.mkv
-                            if 'ISO' in encoding \
-                                    or "windows-1251" in encoding:
-                                encoding = 'gbk'
-                            extract_sub_name = extract_sub_name. \
-                                decode(encoding)
-                            extract_sub_name = extract_sub_name. \
-                                encode(GetSubtitles.output_encode)
-                        else:
-                            extract_sub_name = extract_sub_name. \
-                                encode(GetSubtitles.output_encode)
-                    print(prefix + ' ' + extract_sub_name)
-                except UnicodeDecodeError:
-                    print(prefix + ' '
-                          + extract_sub_name.encode('gbk'))
-        return extract_sub_names
+        if datatype not in self.support_file_list:
+            # 不支持的压缩包类型
+            message = 'unsupported file type ' + datatype
+            return message, None
+        # 获得猜测字幕名称
+        # 查询模式必有返回值，自动模式无猜测值返回None
+        extract_sub_names = self.extract_subtitle(
+            one_video, video_info['path'],
+            sub_choice, datatype, sub_data_bytes, info_dict,
+            rename, self.single, self.both, self.plex, delete=delete
+        )
+        if not extract_sub_names:
+            return message, None
+        for extract_sub_name, extract_sub_type in extract_sub_names:
+            extract_sub_name = extract_sub_name.split('/')[-1]
+            try:
+                # zipfile: Historical ZIP filename encoding
+                # try cp437 encoding
+                extract_sub_name = extract_sub_name. \
+                    encode('cp437').decode('gbk')
+            except:
+                pass
+            try:
+                if py == 2:
+                    if isinstance(extract_sub_name, str):
+                        encoding = chardet. \
+                            detect(extract_sub_name)
+                        encoding = encoding['encoding']
+                        # reason of adding windows-1251 check:
+                        # using ZIMUZU downloader
+                        # I.Robot.2004.1080p.Bluray.x264.DTS-DEFiNiTE.mkv
+                        if 'ISO' in encoding \
+                                or "windows-1251" in encoding:
+                            encoding = 'gbk'
+                        extract_sub_name = extract_sub_name. \
+                            decode(encoding)
+                        extract_sub_name = extract_sub_name. \
+                            encode(GetSubtitles.output_encode)
+                    else:
+                        extract_sub_name = extract_sub_name. \
+                            encode(GetSubtitles.output_encode)
+                print(prefix + ' ' + extract_sub_name)
+            except UnicodeDecodeError:
+                print(prefix + ' '
+                      + extract_sub_name.encode('gbk'))
+        return message, extract_sub_names
 
     def start(self):
 
@@ -644,15 +652,19 @@ class GetSubtitles(object):
                         sub_dict.pop(sub_choice)
                         try:
                             if i == 0:
-                                n_extract_sub_names = self.process_archive(
+                                error, n_extract_sub_names = self.process_archive(
                                     one_video, video_info,
                                     sub_choice, link, session, info_dict)
                             else:
-                                n_extract_sub_names = self.process_archive(
+                                error, n_extract_sub_names = self.process_archive(
                                     one_video, video_info,
                                     sub_choice, link, session,
                                     info_dict, rename=False, delete=False)
-                            if not n_extract_sub_names:
+                            if error:
+                                print(prefix + ' error: ' + error)
+                                print(prefix)
+                                continue
+                            elif not n_extract_sub_names:
                                 print(prefix
                                       + ' no matched subtitle in this archive')
                                 continue
