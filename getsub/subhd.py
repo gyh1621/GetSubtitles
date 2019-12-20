@@ -31,17 +31,15 @@ class SubHDDownloader(object):
         self.site_url = 'https://subhd.tv'
         self.search_url = 'https://subhd.tv/search/'
 
-    def get_subtitles(self, keywords, sub_num=5):
+    def get_subtitles(self, keywords, info_dict, sub_num=5):
 
         """ 传入关键字列表，返回有序字典。
                 keywords:重要度降序的关键字列表
                 sub_num: 字幕结果数，默认为5
+                info_dict: 视频信息
             返回：
-                字幕字典:{
-                            '字幕名': {'lan': '字幕包含语言值',
-                                       'link': '字幕链接'}
-                         }
-                         按语言值降序排列
+                字幕字典: 按语言值降序排列
+                    {'字幕名': {'lan': '字幕包含语言值', 'link': '字幕链接'}}
                 字幕包含语言值：英文加1， 繁体加2， 简体加4， 双语加8 """
 
         print(prefix + ' Searching SUBHD...', end='\r')
@@ -74,6 +72,11 @@ class SubHDDownloader(object):
 
             if '总共 0 条' not in small_text:
                 for one_box in bs_obj.find_all('div', {'class': 'box'}):
+
+                    if info_dict['type'] == 'movie' \
+                       and not one_box.find('div', {'class': 'movielist'}):
+                            continue
+
                     a = one_box.find('div', {'class': 'd_title'}).find('a')
                     sub_url = self.site_url + a.attrs['href']
                     sub_name = '[SUBHD]' + a.text.encode('utf8') if py == 2 \

@@ -34,7 +34,7 @@ class ZimukuDownloader(object):
         self.site_url = 'http://www.zimuku.la'
         self.search_url = 'http://www.zimuku.la/search?q='
 
-    def get_subtitles(self, keywords, sub_num=10):
+    def get_subtitles(self, keywords, info_dict, sub_num=10):
 
         print(prefix + ' Searching ZIMUKU...', end='\r')
 

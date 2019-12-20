@@ -180,11 +180,13 @@ class GetSubtitles(object):
         title = title.strip()
 
         base_keyword = title
-        # if info_dict.get('year') and info_dict.get('type') == 'movie':
-        #    base_keyword += (' ' + str(info_dict['year']))  # 若为电影添加年份
+
         if info_dict.get('season'):
             base_keyword += (' s%s' % str(info_dict['season']).zfill(2))
         keywords.append(base_keyword)
+
+        if info_dict.get('year') and info_dict.get('type') == 'movie':
+           keywords.append(str(info_dict['year']))  # 若为电影添加年份
         if info_dict.get('episode'):
             keywords.append(' e%s' % str(info_dict['episode']).zfill(2))
         if info_dict.get('format'):
@@ -623,7 +625,7 @@ class GetSubtitles(object):
                 for i, downloader in enumerate(self.downloader):
                     try:
                         sub_dict.update(
-                            downloader.get_subtitles(tuple(keywords))
+                            downloader.get_subtitles(tuple(keywords), info_dict)
                         )
                     except ValueError as e:
                         if str(e) == 'Zimuku搜索结果出现未知结构页面':
