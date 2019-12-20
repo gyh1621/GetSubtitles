@@ -49,7 +49,7 @@ class ZimuzuDownloader(object):
             if '字幕(0)' not in tab_text:
                 for one_box in bs_obj.find_all('div',
                                                {'class': 'search-item'}):
-                    sub_name = '[ZMZ]' + one_box.find('p').find('font').text
+                    sub_name = '[ZMZ]' + one_box.find('strong', {'class': 'list_title'}).text
                     sub_name = sub_name.encode('utf8') if py == 2 else sub_name
                     a = one_box.find('a')
                     text = a.text.encode('utf8') if py == 2 else a.text
