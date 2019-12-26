@@ -11,6 +11,7 @@
 
 `pip install getsub`
 
+> Windows 下安装时依赖库 `pylzma` 需要安装 `Microsoft Visual C++ Build Tools` 较为麻烦。可以下载[对应 whl 文件](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pylzma)直接安装 `pylzma` 后再安装 `getsub`。
 
 
 
