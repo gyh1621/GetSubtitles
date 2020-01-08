@@ -1,5 +1,4 @@
-#!/usr/bin/python3
-#coding: utf-8
+# coding: utf-8
 
 from __future__ import print_function
 try:
@@ -13,33 +12,29 @@ import requests
 from bs4 import BeautifulSoup
 from guessit import guessit
 
-from .sys_global_var import py, prefix
-from .progress_bar import ProgressBar
+from getsub.downloader.downloader import Downloader
+from getsub.sys_global_var import py, prefix
+from getsub.progress_bar import ProgressBar
 
 
 ''' Zimuku 字幕下载器
 '''
 
 
-class ZimukuDownloader(object):
+class ZimukuDownloader(Downloader):
 
-    def __init__(self):
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5)\
-                            AppleWebKit 537.36 (KHTML, like Gecko) Chrome",
-            "Accept-Language": "zh-CN,zh;q=0.8",
-            "Accept": "text/html,application/xhtml+xml,\
-                        application/xml;q=0.9,image/webp,*/*;q=0.8"
-        }
-        self.site_url = 'http://www.zimuku.la'
-        self.search_url = 'http://www.zimuku.la/search?q='
+    name = 'zimuku'
+    choice_prefix = '[ZIMUKU]'
+    site_url = 'http://www.zimuku.la'
+    search_url = 'http://www.zimuku.la/search?q='
 
-    def get_subtitles(self, keywords, info_dict, sub_num=10):
+    def get_subtitles(self, video_name, sub_num=10):
 
         print(prefix + ' Searching ZIMUKU...', end='\r')
 
-        keywords = list(keywords)
+        keywords, info_dict = Downloader.get_keywords(video_name)
         keyword = ' '.join(keywords)
+
         info = guessit(keyword)
         keywords.pop(0)
         keywords.insert(0, info['title'])
@@ -49,11 +44,11 @@ class ZimukuDownloader(object):
 
         sub_dict = order_dict()
         s = requests.session()
-        s.headers.update(self.headers)
+        s.headers.update(Downloader.header)
 
         while True:
             # 当前关键字搜索
-            r = s.get(self.search_url + keyword, timeout=10)
+            r = s.get(ZimukuDownloader.search_url + keyword, timeout=10)
             if py == 2:
                 html = r.text.encode('utf8')
             else:
@@ -103,12 +98,13 @@ class ZimukuDownloader(object):
                                 continue
                         for a in item.find_all('td', {'class': 'first'})[:3]:
                             a = a.a
-                            a_link = self.site_url + a.attrs['href']
+                            a_link = ZimukuDownloader.site_url + \
+                                a.attrs['href']
                             if py == 2:
                                 a_title = a.text.encode('utf8')
                             else:
                                 a_title = a.text
-                            a_title = '[ZIMUKU]' + a_title
+                            a_title = ZimukuDownloader.choice_prefix + a_title
                             sub_dict[a_title] = {'type': 'default',
                                                  'link': a_link}
                 elif bs_obj.find('div', {'class': 'persub'}):
@@ -118,8 +114,9 @@ class ZimukuDownloader(object):
                             a_title = persub.h1.text.encode('utf8')
                         else:
                             a_title = persub.h1.text
-                        a_link = self.site_url + persub.h1.a.attrs['href']
-                        a_title = '[ZIMUKU]' + a_title
+                        a_link = ZimukuDownloader.site_url + \
+                            persub.h1.a.attrs['href']
+                        a_title = ZimukuDownloader.choice_prefix + a_title
                         sub_dict[a_title] = {'type': 'shooter', 'link': a_link}
                 else:
                     raise ValueError('Zimuku搜索结果出现未知结构页面')
@@ -153,12 +150,14 @@ class ZimukuDownloader(object):
                         type_score += 8
                 sub_info['lan'] = type_score
                 download_link = bs_obj.find('a', {'id': 'down1'}).attrs['href']
-                download_link = urljoin(self.site_url, download_link)
+                download_link = urljoin(
+                    ZimukuDownloader.site_url, download_link)
                 r = s.get(download_link, timeout=60)
                 bs_obj = BeautifulSoup(r.text, 'html.parser')
                 download_link = bs_obj.find('a', {'rel': 'nofollow'})
                 download_link = download_link.attrs['href']
-                download_link = urljoin(self.site_url, download_link)
+                download_link = urljoin(
+                    ZimukuDownloader.site_url, download_link)
                 sub_info['link'] = download_link
             else:
                 # 射手字幕页面
@@ -194,7 +193,8 @@ class ZimukuDownloader(object):
                 sorted(sub_dict.items(),
                        key=lambda e: e[1]['lan'], reverse=True)
             )
-        return sub_dict
+        keys = list(sub_dict.keys())[:sub_num]
+        return {key: sub_dict[key] for key in keys}
 
     def download_file(self, file_name, download_link, session=None):
 
@@ -223,15 +223,4 @@ class ZimukuDownloader(object):
         else:
             datatype = 'Unknown'
 
-        return datatype, sub_data_bytes
-
-
-if __name__ == '__main__':
-    from main import GetSubtitles
-    keywords, info_dict = GetSubtitles(
-        '', 1, 2, 3, 4, 5, 6, 7, 8, 9).sort_keyword('the expanse s01e01')
-    zimuku = ZimukuDownloader()
-    sub_dict = zimuku.get_subtitles(keywords)
-    print('\nResult:')
-    for k, v in sub_dict.items():
-        print(k, v)
+        return datatype, sub_data_bytes, ''

@@ -8,48 +8,43 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
-from .sys_global_var import py, prefix
-from .progress_bar import ProgressBar
+from getsub.downloader.downloader import Downloader
+from getsub.sys_global_var import py, prefix
+from getsub.progress_bar import ProgressBar
 
 
 ''' Zimuzu 字幕下载器
 '''
 
 
-class ZimuzuDownloader(object):
-    def __init__(self):
-        self.headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5)\
-                            AppleWebKit 537.36 (KHTML, like Gecko) Chrome",
-            "Accept-Language": "zh-CN,zh;q=0.8",
-            "Accept": "text/html,application/xhtml+xml,\
-                        application/xml;q=0.9,image/webp,*/*;q=0.8"
-        }
-        self.site_url = 'http://www.zmz2019.com'
-        self.search_url = 'http://www.zmz2019.com/search?\
-                            keyword={0}&type=subtitle'
+class ZimuzuDownloader(Downloader):
 
-    def get_subtitles(self, keywords, info_dict, sub_num=5):
+    name = 'zimuzu'
+    choice_prefix = '[ZIMUZU]'
+    site_url = 'http://www.zmz2019.com'
+    search_url = 'http://www.zmz2019.com/search?keyword={0}&type=subtitle'
+
+    def get_subtitles(self, video_name, sub_num=5):
 
         print(prefix + ' Searching ZIMUZU...', end='\r')
 
-        keywords = list(keywords)
-        keyword = ''
-        for one in keywords:
-            keyword += (one + ' ')
+        keywords, info_dict = Downloader.get_keywords(video_name)
+        keyword = ' '.join(keywords)
 
         sub_dict = order_dict()
         s = requests.session()
         while True:
             # 当前关键字查询
-            r = s.get(self.search_url.format(keyword), headers=self.headers, timeout=10)
+            r = s.get(ZimuzuDownloader.search_url.format(keyword),
+                      headers=Downloader.header, timeout=10)
             bs_obj = BeautifulSoup(r.text, 'html.parser')
             tab_text = bs_obj.find('div', {'class': 'article-tab'}).text
             tab_text = tab_text.encode('utf8') if py == 2 else tab_text
             if '字幕(0)' not in tab_text:
                 for one_box in bs_obj.find_all('div',
                                                {'class': 'search-item'}):
-                    sub_name = '[ZMZ]' + one_box.find('strong', {'class': 'list_title'}).text
+                    sub_name = ZimuzuDownloader.choice_prefix + \
+                        one_box.find('strong', {'class': 'list_title'}).text
                     sub_name = sub_name.encode('utf8') if py == 2 else sub_name
 
                     if info_dict['type'] == 'movie' and '美剧字幕' in sub_name:
@@ -57,13 +52,13 @@ class ZimuzuDownloader(object):
 
                     a = one_box.find('a')
                     text = a.text.encode('utf8') if py == 2 else a.text
-                    sub_url = self.site_url + a.attrs['href']
+                    sub_url = ZimuzuDownloader.site_url + a.attrs['href']
                     type_score = 0
                     type_score += ('英文' in text) * 1
                     type_score += ('繁体' in text) * 2
                     type_score += ('简体' in text) * 4
                     type_score += ('中英' in text) * 8
-                    sub_dict[sub_name] = {'lan': type_score, 'link': sub_url}
+                    sub_dict[sub_name] = {'lan': type_score, 'link': sub_url, 'session': None}
                     if len(sub_dict) >= sub_num:
                         del keywords[:]  # 字幕条数达到上限，清空keywords
                         break
@@ -85,19 +80,18 @@ class ZimuzuDownloader(object):
             )
         return sub_dict
 
-    def download_file(self, file_name, sub_url):
-
-        """ 传入字幕页面链接， 字幕包标题， 返回压缩包类型，压缩包字节数据 """
+    def download_file(self, file_name, sub_url, session=None):
 
         s = requests.session()
-        r = s.get(sub_url, headers=self.headers)
+        header = Downloader.header.copy()
+        r = s.get(sub_url, headers=Downloader.header)
         bs_obj = BeautifulSoup(r.text, 'html.parser')
         a = bs_obj.find('div', {'class': 'subtitle-links'}).a
         download_link = a.attrs['href']
-        self.headers['Referer'] = download_link
+        header['Referer'] = download_link
         ajax_url = 'http://got001.com/api/v1/static/subtitle/detail?'
         ajax_url += download_link.split('?')[-1]
-        r = s.get(ajax_url, headers=self.headers)
+        r = s.get(ajax_url, headers=header)
         json_obj = json.loads(r.text)
         download_link = json_obj['data']['info']['file']
 
@@ -139,4 +133,4 @@ class ZimuzuDownloader(object):
             else:
                 datatype = 'Unknown'
 
-        return datatype, sub_data_bytes
+        return datatype, sub_data_bytes, ''

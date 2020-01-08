@@ -18,10 +18,8 @@ from requests.utils import quote
 
 from getsub.__version__ import __version__
 from getsub.sys_global_var import py, prefix
-from getsub.subhd import SubHDDownloader
-from getsub.zimuzu import ZimuzuDownloader
-from getsub.zimuku import ZimukuDownloader
 from getsub.py7z import Py7z
+from getsub.downloader import DownloaderManager
 
 
 class GetSubtitles(object):
@@ -41,9 +39,6 @@ class GetSubtitles(object):
                                   '.mpe', '.mpv', '.mpg', '.m2v', '.svi',
                                   '.3gp', '.3g2', '.mxf', '.roq', '.nsv',
                                   '.flv', '.f4v', '.f4p', '.f4a', '.f4b']
-        self.service_short_names = {
-            'amazon prime': 'amzn'
-        }
         self.sub_format_list = ['.ass', '.srt', '.ssa', '.sub']
         self.support_file_list = ['.zip', '.rar', '.7z']
         self.arg_name = name
@@ -59,25 +54,18 @@ class GetSubtitles(object):
         self.debug = debug
         self.s_error = ''
         self.f_error = ''
-        self.subhd = SubHDDownloader()
-        self.zimuzu = ZimuzuDownloader()
-        self.zimuku = ZimukuDownloader()
         if not downloader:
-            self.downloader = [self.subhd, self.zimuzu, self.zimuku]
-        elif downloader == 'subhd':
-            self.downloader = [self.subhd]
-        elif downloader == 'zimuzu':
-            self.downloader = [self.zimuzu]
-        elif downloader == 'zimuku':
-            self.downloader = [self.zimuku]
+            self.downloader = DownloaderManager.downloaders
         else:
-            print("no such downloader, "
-                  "please choose from 'subhd','zimuzu' and 'zimuku'")
-            #print("no such downloader, please choose from 'zimuzu' and 'zimuku'")
+            if downloader not in DownloaderManager.downloader_names:
+                print("\nNO SUCH DOWNLOADER:", "PLEASE CHOOSE FROM",
+                      ', '.join(DownloaderManager.downloader_names), '\n')
+                sys.exit(1)
+            self.downloader = [
+                DownloaderManager.get_downloader_by_name(downloader)]
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
 
     def get_path_name(self, args, args1):
-
         """ 传入输入的视频名称或路径,
             构造一个包含视频路径和是否存在字幕信息的字典返回。
             video_dict: {'path': path, 'have_subtitle': sub_exists} """
@@ -113,7 +101,7 @@ class GetSubtitles(object):
                             )
                         )
                     )
-                    video_dict[one_name] = {'path': next(item for item in [store_path,os.path.abspath(root)] if item != ''),
+                    video_dict[one_name] = {'path': next(item for item in [store_path, os.path.abspath(root)] if item != ''),
                                             'have_subtitle': sub_exists}
 
         elif os.path.isabs(mix_str):  # 视频绝对路径
@@ -135,79 +123,16 @@ class GetSubtitles(object):
                 )
             )
             video_dict[v_name] = {'path': s_path,
-                                'have_subtitle': sub_exists}
+                                  'have_subtitle': sub_exists}
         else:  # 单个视频名字，无路径
             if not os.path.isdir(store_path):
                 video_dict[mix_str] = {'path': os.getcwd(), 'have_subtitle': 0}
             else:
-                video_dict[mix_str] = {'path': os.path.abspath(store_path), 'have_subtitle': 0}
+                video_dict[mix_str] = {'path': os.path.abspath(
+                    store_path), 'have_subtitle': 0}
         return video_dict
 
-    def sort_keyword(self, name):
-
-        """ 解析视频名
-            返回将各个关键字按重要度降序排列的列表，原始视频信息 """
-
-        name = name.replace('[', '')
-        name = name.replace(']', '')
-        keywords = []
-        info_dict = guessit(name)
-
-        # 若视频名中英混合，去掉字少的语言
-        title = info_dict['title']
-        if py == 2:
-            if sys.stdout.encoding == 'cp936':
-                encoding = 'gbk'
-            else:
-                encoding = 'utf8'
-            title = title.decode(encoding)
-            c_pattern = u'[\u4e00-\u9fff]'
-            e_pattern = u'[a-zA-Z]'
-            c_num = len(re.findall(c_pattern, title))
-            e_num = len(re.findall(e_pattern, title))
-            if c_num > e_num:
-                title = re.sub(e_pattern, '', title).encode('utf8')
-            else:
-                title = re.sub(c_pattern, '', title).encode('utf8')
-        elif py == 3:
-            c_pattern = '[\u4e00-\u9fff]'
-            e_pattern = '[a-zA-Z]'
-            c_num = len(re.findall(c_pattern, title))
-            e_num = len(re.findall(e_pattern, title))
-            if c_num > e_num:
-                title = re.sub(e_pattern, '', title)
-            else:
-                title = re.sub(c_pattern, '', title)
-        title = title.strip()
-
-        base_keyword = title
-
-        if info_dict.get('season'):
-            base_keyword += (' s%s' % str(info_dict['season']).zfill(2))
-        keywords.append(base_keyword)
-
-        if info_dict.get('year') and info_dict.get('type') == 'movie':
-           keywords.append(str(info_dict['year']))  # 若为电影添加年份
-        if info_dict.get('episode'):
-            keywords.append(' e%s' % str(info_dict['episode']).zfill(2))
-        if info_dict.get('format'):
-            keywords.append(info_dict['format'])
-        if info_dict.get('release_group'):
-            keywords.append(info_dict['release_group'])
-        if info_dict.get('streaming_service'):
-            service_name = info_dict['streaming_service']
-            short_names = self.service_short_names.get(service_name.lower())
-            if short_names:
-                keywords.append(short_names)
-        if info_dict.get('screen_size'):
-            keywords.append(str(info_dict['screen_size']))
-
-        # 对关键字进行 URL 编码
-        keywords = [quote(_keyword) for _keyword in keywords]
-        return keywords, info_dict
-
     def choose_subtitle(self, sub_dict):
-
         """ 传入候选字幕字典
             若为查询模式返回选择的字幕包名称，字幕包下载地址
             否则返回字幕字典第一个字幕包的名称，字幕包下载地址 """
@@ -266,7 +191,6 @@ class GetSubtitles(object):
         return exit, chosen_subs
 
     def guess_subtitle(self, sublist, video_info):
-
         """ 传入压缩包字幕列表，视频信息，返回最佳字幕名称。
             若没有符合字幕，查询模式下返回第一条字幕， 否则返回None """
 
@@ -330,7 +254,7 @@ class GetSubtitles(object):
                 if 'chs.eng' in one_sub or 'chs&eng' in one_sub:
                     score[-1] += 7
                 if '中英' in one_sub or '简英' in one_sub or '双语' in one_sub or '简体&英文' in one_sub:
-                    score[-1] +=9
+                    score[-1] += 9
             # py2 strange decode error, happens time to time
             except UnicodeDecodeError:
                 if '简体'.decode('utf8') in one_sub \
@@ -346,7 +270,7 @@ class GetSubtitles(object):
                         or '简英'.decode('utf8') in one_sub \
                         or '双语'.decode('utf8') in one_sub \
                         or '简体&英文'.decode('utf8') in one_sub:
-                    score[-1] += 9				
+                    score[-1] += 9
 
             score[-1] += ('ass' in one_sub or 'ssa' in one_sub) * 2
             score[-1] += ('srt' in one_sub) * 1
@@ -359,7 +283,6 @@ class GetSubtitles(object):
         return sublist[max_pos]
 
     def get_file_list(self, file_handler):
-
         """ 传入一个压缩文件控制对象，读取对应压缩文件内文件列表。
             返回 {one_sub: file_handler} """
 
@@ -386,10 +309,11 @@ class GetSubtitles(object):
         return sub_lists_dict
 
     def extract_subtitle(self, v_name, v_path, archive_name,
-                         datatype, sub_data_b, v_info_d, rename,
+                         datatype, sub_data_b, rename,
                          single, both, plex, delete=True):
-
         """ 接受下载好的字幕包字节数据， 猜测字幕并解压。 """
+
+        v_info_d = guessit(v_name)
 
         sub_buff = BytesIO()
         sub_buff.write(sub_data_b)
@@ -531,8 +455,7 @@ class GetSubtitles(object):
         return to_extract_subs
 
     def process_archive(self, one_video, video_info,
-                        sub_choice, link, session,
-                        info_dict, rename=True, delete=True):
+                        sub_choice, link, session, rename=True, delete=True):
         """ 解压字幕包，返回字幕包中字幕名列表
 
             Return:
@@ -557,21 +480,11 @@ class GetSubtitles(object):
                 )
         if self.query:
             print(prefix + ' ')
-        if '[ZMZ]' in sub_choice:
-            datatype, sub_data_bytes = self.zimuzu.download_file(
-                sub_choice, link
-            )
-        elif '[SUBHD]' in sub_choice:
-            datatype, sub_data_bytes, msg = self.subhd. \
-                download_file(sub_choice, link)
-            if msg == 'false':
-                message = 'download too frequently with subhd downloader,' + \
-                          ' please change to other downloaders'
-                return message, None
-        elif '[ZIMUKU]' in sub_choice:
-            datatype, sub_data_bytes = self.zimuku.download_file(
-                sub_choice, link, session=session
-           )
+        choice_prefix = sub_choice[:sub_choice.find(']') + 1]
+        datatype, sub_data_bytes, err_msg = DownloaderManager.get_downloader_by_choice_prefix(
+            choice_prefix).download_file(sub_choice, link, session=session)
+        if err_msg:
+            return err_msg, None
         extract_sub_names = []
         if datatype not in self.support_file_list:
             # 不支持的压缩包类型
@@ -581,7 +494,7 @@ class GetSubtitles(object):
         # 查询模式必有返回值，自动模式无猜测值返回None
         extract_sub_names = self.extract_subtitle(
             one_video, video_info['path'],
-            sub_choice, datatype, sub_data_bytes, info_dict,
+            sub_choice, datatype, sub_data_bytes,
             rename, self.single, self.both, self.plex, delete=delete
         )
         if not extract_sub_names:
@@ -630,7 +543,6 @@ class GetSubtitles(object):
             self.f_error = ''
 
             try:
-                keywords, info_dict = self.sort_keyword(one_video)
                 print('\n' + prefix + ' ' + one_video)  # 打印当前视频及其路径
                 print(prefix + ' ' + video_info['path'] + '\n' + prefix)
 
@@ -643,7 +555,7 @@ class GetSubtitles(object):
                 for i, downloader in enumerate(self.downloader):
                     try:
                         sub_dict.update(
-                            downloader.get_subtitles(tuple(keywords), info_dict)
+                            downloader.get_subtitles(one_video, sub_num=self.sub_num)
                         )
                     except ValueError as e:
                         if str(e) == 'Zimuku搜索结果出现未知结构页面':
@@ -676,12 +588,12 @@ class GetSubtitles(object):
                             if i == 0:
                                 error, n_extract_sub_names = self.process_archive(
                                     one_video, video_info,
-                                    sub_choice, link, session, info_dict)
+                                    sub_choice, link, session)
                             else:
                                 error, n_extract_sub_names = self.process_archive(
                                     one_video, video_info,
                                     sub_choice, link, session,
-                                    info_dict, rename=False, delete=False)
+                                    rename=False, delete=False)
                             if error:
                                 print(prefix + ' error: ' + error)
                                 print(prefix)
@@ -807,7 +719,8 @@ def main():
         '-d',
         '--downloader',
         action='store',
-        help='choose downloader'
+        help='choose downloader from ' +
+        ', '.join(DownloaderManager.downloader_names)
     )
     arg_parser.add_argument(
         '--debug',
@@ -824,7 +737,6 @@ def main():
 
     if args.over:
         print('\nThe script will replace the old subtitles if exist...\n')
-
 
     GetSubtitles(args.name, args.query, args.single, args.more,
                  args.both, args.over, args.plex, args.debug, sub_num=args.number,
