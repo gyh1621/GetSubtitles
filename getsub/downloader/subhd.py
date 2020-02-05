@@ -23,8 +23,8 @@ class SubHDDownloader(Downloader):
 
     name = 'subhd'
     choice_prefix = '[SUBHD]'
-    site_url = 'https://subhd.tv'
-    search_url = 'https://subhd.tv/search/'
+    site_url = 'https://subhd.la'
+    search_url = 'https://subhd.la/search/'
 
     def get_subtitles(self, video_name, sub_num=5):
 
@@ -55,14 +55,17 @@ class SubHDDownloader(Downloader):
                 time.sleep(2)
                 continue
 
-            if '总共 0 条' not in small_text:
-                for one_box in bs_obj.find_all('div', {'class': 'box'}):
+            if "总共 0 条" not in small_text:
+
+                results = bs_obj.find_all("div", class_="mb-4 bg-white rounded shadow-sm")
+
+                for one_box in results:
 
                     if info_dict['type'] == 'movie' \
-                       and not one_box.find('div', {'class': 'movielist'}):
+                       and not one_box.find('div', class_="px-1 rounded-sm bg-danger text-white"):
                         continue
 
-                    a = one_box.find('div', {'class': 'd_title'}).find('a')
+                    a = one_box.find('div', class_="f12 pt-1").find('a')
                     sub_url = SubHDDownloader.site_url + a.attrs['href']
                     sub_name = SubHDDownloader.choice_prefix + a.text.encode('utf8') if py == 2 \
                         else SubHDDownloader.choice_prefix + a.text
@@ -70,7 +73,7 @@ class SubHDDownloader(Downloader):
                         text = one_box.text.encode('utf8')
                     else:
                         text = one_box.text
-                    if '/ar' in a.attrs['href']:
+                    if '/a' in a.attrs['href']:
                         type_score = 0
                         type_score += ('英文' in text) * 1
                         type_score += ('繁体' in text) * 2
