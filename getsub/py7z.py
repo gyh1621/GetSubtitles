@@ -4,7 +4,6 @@ from py7zlib import Archive7z
 
 
 class Py7z:
-
     def __init__(self, file):
         self.archive = Archive7z(file)
 

@@ -8,11 +8,7 @@ from getsub.downloader.zimuku import ZimukuDownloader
 
 class DownloaderManager:
 
-    downloaders = (
-        SubHDDownloader(),
-        ZimuzuDownloader(),
-        ZimukuDownloader()
-    )
+    downloaders = (SubHDDownloader(), ZimuzuDownloader(), ZimukuDownloader())
     downloader_names = [d.__class__.name for d in downloaders]
 
     @classmethod
