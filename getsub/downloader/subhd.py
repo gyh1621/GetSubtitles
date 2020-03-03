@@ -22,8 +22,8 @@ class SubHDDownloader(Downloader):
 
     name = "subhd"
     choice_prefix = "[SUBHD]"
-    site_url = "https://subhd.la"
-    search_url = "https://subhd.la/search/"
+    site_url = "http://subhd.la"
+    search_url = "http://subhd.la/search/"
 
     def get_subtitles(self, video_name, sub_num=5):
 
@@ -34,13 +34,10 @@ class SubHDDownloader(Downloader):
 
         sub_dict = order_dict()
         s = requests.session()
+        s.headers.update(Downloader.header)
         while True:
             # 当前关键字查询
-            r = s.get(
-                SubHDDownloader.search_url + keyword,
-                headers=Downloader.header,
-                timeout=10,
-            )
+            r = s.get(SubHDDownloader.search_url + keyword, timeout=10,)
             bs_obj = BeautifulSoup(r.text, "html.parser")
             try:
                 small_text = bs_obj.find("small").text
@@ -101,15 +98,18 @@ class SubHDDownloader(Downloader):
 
     def download_file(self, file_name, sub_url, session=None):
 
+        if not session:
+            session = requests.session()
+            session.headers.update(Downloader.header)
+
         sid = sub_url.split("/")[-1]
-        r = requests.get(sub_url, headers=Downloader.header)
+        r = session.get(sub_url)
         bs_obj = BeautifulSoup(r.text, "html.parser")
         dtoken = bs_obj.find("button", {"id": "down"})["dtoken"]
 
-        r = requests.post(
+        r = session.post(
             SubHDDownloader.site_url + "/ajax/down_ajax",
             data={"sub_id": sid, "dtoken": dtoken},
-            headers=Downloader.header,
         )
 
         content = r.content.decode("unicode-escape")
