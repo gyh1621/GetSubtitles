@@ -10,7 +10,6 @@ from traceback import format_exc
 from requests import exceptions
 
 from getsub.__version__ import __version__
-from getsub.constants import PREFIX
 from getsub.downloader import DownloaderManager
 from getsub.util import get_videos, choose_archive, process_archive
 
@@ -65,11 +64,11 @@ class GetSubtitles(object):
                 result = downloader.get_subtitles(video_name, sub_num=self.sub_num)
                 results.update(result)
             except ValueError as e:
-                print(PREFIX + " error: " + str(e))
+                print("error: " + str(e))
             except (exceptions.Timeout, exceptions.ConnectionError):
-                print(PREFIX + " connect timeout, search next site.")
+                print("connect timeout, search next site.")
                 if i == (len(self.downloader) - 1):
-                    print(PREFIX + " PLEASE CHECK YOUR NETWORK STATUS")
+                    print("PLEASE CHECK YOUR NETWORK STATUS")
                     sys.exit(0)
                 else:
                     continue
@@ -107,7 +106,7 @@ class GetSubtitles(object):
             archive_path = path.join(video_info["store_path"], chosen_sub + datatype)
             with open(archive_path, "wb") as f:
                 f.write(archive_data)
-            print(PREFIX + " save original file.")
+            print("save original file.")
 
         return "", extract_sub_names
 
@@ -138,10 +137,9 @@ class GetSubtitles(object):
                     sub_dict[chosen_sub]["session"],
                 )
                 if error:
-                    print(PREFIX + " error: " + error)
-                    print(PREFIX)
+                    print("error: " + error + "\n")
             except Exception as e:
-                print(PREFIX + " error:" + str(e))
+                print("error:" + str(e))
             finally:
                 sub_dict.pop(chosen_sub)
 
@@ -153,15 +151,18 @@ class GetSubtitles(object):
             self.arg_name, self.sub_store_path, self.sub_identifier
         )
 
-        for one_video, video_info in all_video_dict.items():
+        for i, item in enumerate(all_video_dict.items()):
+
+            one_video, video_info = item
 
             self.s_error = ""
             self.f_error = ""
 
-            print("\n" + PREFIX + " " + one_video)  # 打印当前视频及其路径
-            print(PREFIX + " " + video_info["video_path"] + "\n" + PREFIX)
+            print("\n- Video:", one_video)  # 打印当前视频及其路径
+            print("- Video Path:", video_info["video_path"])
+            print("- Subtitles Store Path:", video_info["store_path"] + "\n")
             if video_info["has_subtitle"] and not self.over:
-                print(PREFIX + " subtitle already exists, add '-o' to replace it.")
+                print("subtitle already exists, add '-o' to replace it.")
                 continue
 
             try:
@@ -191,7 +192,10 @@ class GetSubtitles(object):
                         "trace_back": self.f_error,
                     }
                 )
-                print(PREFIX + " error:" + self.s_error)
+                print("ERROR:" + self.s_error)
+            if i == len(all_video_dict) - 1:
+                break
+            print("\n========================================================")
 
         if len(self.failed_list):
             print("\n===============================", end="")

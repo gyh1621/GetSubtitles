@@ -1,7 +1,5 @@
 # coding: utf-8
 
-PREFIX = "├ "
-
 SUB_FORMATS = [".ass", ".srt", ".ssa", ".sub"]
 ARCHIVE_TYPES = [".zip", ".rar", ".7z"]
 

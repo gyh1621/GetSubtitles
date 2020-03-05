@@ -12,7 +12,7 @@ from shutil import get_terminal_size
 import rarfile
 from guessit import guessit
 
-from getsub.constants import SUB_FORMATS, ARCHIVE_TYPES, VIDEO_FORMATS, PREFIX
+from getsub.constants import SUB_FORMATS, ARCHIVE_TYPES, VIDEO_FORMATS
 
 
 class ProgressBar:
@@ -117,22 +117,23 @@ def get_videos(raw_path, store_path="", identifier=""):
 def _print_and_choose(items):
 
     for i, item in enumerate(items):
-        print(PREFIX + " %3s) %s" % (i, item))
+        print("%3s) %s" % (i, item))
 
     choice = None
     while choice is None:
         try:
-            print(PREFIX)
-            choice = input(PREFIX + "  choose: ")
+            print()
+            choice = input(" choose: ")
             choice = int(choice)
             assert choice < len(items)
         except ValueError:
-            print(PREFIX + "  only numbers accepted")
+            print(" only numbers accepted")
             choice = None
         except AssertionError:
-            print(PREFIX + "  ", end="\r")
+            print(" ", end="\r")
             print("choice %d not within the range" % choice)
             choice = None
+    print()
 
     return choice
 
@@ -406,7 +407,7 @@ def process_archive(
                 extract_subs.append([subname, another_sub_type])
                 break
         else:
-            print(PREFIX + " no %s subtitles in this archive" % another_sub_type)
+            print("no %s subtitles in this archive" % another_sub_type)
 
     v_name_without_format = path.splitext(video_name)[0]
 
@@ -435,9 +436,9 @@ def process_archive(
         except Exception:
             pass
         try:
-            print(PREFIX + " " + extract_sub_name)
+            print("\nExtracted:", extract_sub_name)
         except UnicodeDecodeError:
-            print(PREFIX + " " + extract_sub_name.encode("gbk"))
+            print("\nExtracted:".encode("gbk"), extract_sub_name.encode("gbk"))
     return error, extract_subs
 
 

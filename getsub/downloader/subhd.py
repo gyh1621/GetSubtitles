@@ -10,7 +10,6 @@ import requests
 from bs4 import BeautifulSoup
 
 from getsub.downloader.downloader import Downloader
-from getsub.constants import PREFIX
 from getsub.util import ProgressBar
 
 
@@ -27,7 +26,7 @@ class SubHDDownloader(Downloader):
 
     def get_subtitles(self, video_name, sub_num=5):
 
-        print(PREFIX + " Searching SUBHD...", end="\r")
+        print("Searching SUBHD...", end="\r")
 
         keywords, info_dict = Downloader.get_keywords(video_name)
         keyword = " ".join(keywords)
@@ -44,7 +43,7 @@ class SubHDDownloader(Downloader):
             except AttributeError:
                 char_error = "The URI you submitted has disallowed characters"
                 if char_error in bs_obj.text:
-                    print(PREFIX + " [SUBHD ERROR] " + char_error + ": " + keyword)
+                    print("[SUBHD ERROR] " + char_error + ": " + keyword)
                     return sub_dict
                 # 搜索验证按钮
                 time.sleep(2)
@@ -126,7 +125,7 @@ class SubHDDownloader(Downloader):
                 chunk_size = 1024  # 单次请求最大值
                 # 内容体总大小
                 content_size = int(response.headers["content-length"])
-                bar = ProgressBar(PREFIX + " Get", file_name.strip(), content_size)
+                bar = ProgressBar("Get", file_name.strip(), content_size)
                 sub_data_bytes = b""
                 for data in response.iter_content(chunk_size=chunk_size):
                     sub_data_bytes += data

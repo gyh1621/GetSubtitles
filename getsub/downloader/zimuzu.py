@@ -8,7 +8,6 @@ import requests
 from bs4 import BeautifulSoup
 
 from getsub.downloader.downloader import Downloader
-from getsub.constants import PREFIX
 from getsub.util import ProgressBar
 
 
@@ -25,7 +24,7 @@ class ZimuzuDownloader(Downloader):
 
     def get_subtitles(self, video_name, sub_num=5):
 
-        print(PREFIX + " Searching ZIMUZU...", end="\r")
+        print("Searching ZIMUZU...", end="\r")
 
         keywords, info_dict = Downloader.get_keywords(video_name)
         keyword = " ".join(keywords)
@@ -103,13 +102,13 @@ class ZimuzuDownloader(Downloader):
                 if response.headers.get("content-length"):
                     # 内容体总大小
                     content_size = int(response.headers["content-length"])
-                    bar = ProgressBar(PREFIX + " Get", file_name.strip(), content_size)
+                    bar = ProgressBar("Get", file_name.strip(), content_size)
                     sub_data_bytes = b""
                     for data in response.iter_content(chunk_size=chunk_size):
                         sub_data_bytes += data
                         bar.refresh(len(sub_data_bytes))
                 else:
-                    bar = ProgressBar(PREFIX + " Get", file_name.strip())
+                    bar = ProgressBar("Get", file_name.strip())
                     sub_data_bytes = b""
                     for data in response.iter_content(chunk_size=chunk_size):
                         sub_data_bytes += data
