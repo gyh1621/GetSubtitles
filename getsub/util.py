@@ -1,16 +1,17 @@
 # coding: utf-8
 
 import os
+import re
 import zipfile
+import tempfile
+import subprocess
 from os import path
-
 from io import BytesIO
 from shutil import get_terminal_size
 
 import rarfile
 from guessit import guessit
 
-from getsub.py7z import Py7z
 from getsub.constants import SUB_FORMATS, ARCHIVE_TYPES, VIDEO_FORMATS, PREFIX
 
 
@@ -316,7 +317,7 @@ def get_file_list(data, datatype):
     if datatype == ".7z":
         try:
             sub_buff.seek(0)
-            file_handler = Py7z(sub_buff)
+            file_handler = P7ZIP(sub_buff)
         except Exception:
             datatype = ".zip"  # try with zipfile
     if datatype == ".zip":
@@ -438,3 +439,59 @@ def process_archive(
         except UnicodeDecodeError:
             print(PREFIX + " " + extract_sub_name.encode("gbk"))
     return error, extract_subs
+
+
+def run_command(cmd):
+    process = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+    )
+    output, error = process.communicate()
+    return output.decode(), error.decode(), process.returncode
+
+
+class P7ZIP:
+    def __init__(self, file):
+        self.data = file.read()
+        # test if it is a valid 7zip file
+        self.namelist()
+
+    def _parse_list_output(self, output):
+        header_pattern = r"\s+Date\s+Time\s+Attr\s+Size\s+Compressed\s+Name\s+"
+        body = re.split(header_pattern, output)[-1]
+        file_names = []
+        for line in body.split("\n")[1:]:
+            if line.startswith("-----"):  # reach end
+                break
+            parts = re.split(r"\s", line.strip())
+            file_name = parts[-1].strip()
+            if path.basename(file_name) == file_name:  # root dir
+                continue
+            file_names.append(file_name)
+        return file_names
+
+    def namelist(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = path.join(tmp_dir, "archive.7z")
+            with open(file_path, "wb") as f:
+                f.write(self.data)
+            cmd = "7z l " + file_path
+            output, err, status = run_command(cmd)
+            if status != 0:
+                raise ValueError(err)
+            file_names = self._parse_list_output(output)
+        return file_names
+
+    def read(self, name):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            file_path = path.join(tmp_dir, "archive.7z")
+            with open(file_path, "wb") as f:
+                f.write(self.data)
+            cmd_lists = ["7z", "e", file_path, "-o" + tmp_dir, name]
+            cmd = " ".join(cmd_lists)
+            output, err, status = run_command(cmd)
+            if status != 0:
+                raise ValueError(err)
+            sub_file_path = path.join(tmp_dir, path.basename(name))
+            with open(sub_file_path, "rb") as f:
+                sub_data = f.read()
+        return sub_data

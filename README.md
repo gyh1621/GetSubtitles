@@ -9,7 +9,7 @@
 
 `pip install getsub`
 
-> Windows 下安装时依赖库 `pylzma` 需要安装 `Microsoft Visual C++ Build Tools` 较为麻烦。可以下载[对应 whl 文件](https://www.lfd.uci.edu/~gohlke/pythonlibs/#pylzma)直接安装 `pylzma` 后再安装 `getsub`。
+> 解压 `7z` 需要 `7z` 的支持，可在[此处](https://www.7-zip.org/download.html)下载对应系统版本并将执行文件路径放入环境变量中。
 
 > 解压 `rar` 需要 `unrar` 的支持，可在[此处](https://www.rarlab.com/rar_add.htm)下载对应系统版本并将执行文件路径放入环境变量中。
 
