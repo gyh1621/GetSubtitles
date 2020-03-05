@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import unittest
 
 from getsub.util import guess_subtitle, _compute_subtitle_score

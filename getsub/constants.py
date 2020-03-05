@@ -1,3 +1,5 @@
+# coding: utf-8
+
 PREFIX = "├ "
 
 SUB_FORMATS = [".ass", ".srt", ".ssa", ".sub"]

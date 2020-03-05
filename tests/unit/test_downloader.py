@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import unittest
 from getsub.downloader.downloader import Downloader
 
