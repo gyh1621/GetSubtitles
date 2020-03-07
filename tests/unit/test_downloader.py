@@ -27,9 +27,9 @@ class TestDownloader(unittest.TestCase):
             "La.La.Land.2016.1080p.BluRay.x264.Atmos.TrueHD.7.1-HDChina.mkv",
         )
         results = (
-            ["Show%20s01", "e01", "Web", "GRP", "amzn", "1080p"],
+            ["Show", "s01", "e01", "Web", "GRP", "amzn", "1080p"],
             ["Hanzawa%20Naoki", "e10", "Bluray", "ZhuixinFan", "720p"],
-            ["Homeland%20s02", "e12", "HDTV", "EVOLVE", "720p"],
+            ["Homeland", "s02", "e12", "HDTV", "EVOLVE", "720p"],
             ["La%20La%20Land", "2016", "Bluray", "HDChina", "1080p"],
         )
         for n, r in zip(names, results):

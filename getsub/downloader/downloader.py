@@ -62,11 +62,10 @@ class Downloader(object):
             title = re.sub(c_pattern, "", title)
         title = title.strip()
 
-        base_keyword = title
+        keywords.append(title)
 
         if info_dict.get("season"):
-            base_keyword += " s%s" % str(info_dict["season"]).zfill(2)
-        keywords.append(base_keyword)
+            keywords.append("s%s" % str(info_dict["season"]).zfill(2))
 
         if info_dict.get("year") and info_dict.get("type") == "movie":
             keywords.append(str(info_dict["year"]))  # 若为电影添加年份
