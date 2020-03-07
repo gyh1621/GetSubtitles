@@ -1,9 +1,9 @@
 # coding: utf-8
 
-import re
-
 from guessit import guessit
 from requests.utils import quote
+
+from getsub.util import extract_name
 
 
 class Downloader(object):
@@ -48,20 +48,10 @@ class Downloader(object):
         video_name = video_name.replace("[", "")
         video_name = video_name.replace("]", "")
         keywords = []
+        video_name = extract_name(video_name)
         info_dict = guessit(video_name)
 
-        # 若视频名中英混合，去掉字少的语言
         title = info_dict["title"]
-        c_pattern = "[\u4e00-\u9fff]"
-        e_pattern = "[a-zA-Z]"
-        c_num = len(re.findall(c_pattern, title))
-        e_num = len(re.findall(e_pattern, title))
-        if c_num > e_num:
-            title = re.sub(e_pattern, "", title)
-        else:
-            title = re.sub(c_pattern, "", title)
-        title = title.strip()
-
         keywords.append(title)
 
         if info_dict.get("season"):

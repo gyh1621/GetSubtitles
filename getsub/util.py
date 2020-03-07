@@ -39,6 +39,46 @@ class ProgressBar:
         print(info, end=end_str)
 
 
+def extract_name(name, en=False):
+    """
+    提取文字
+    若 en 为 True，提取 name 中英文
+    若 en 为 False，提取 name 中占比大的语言
+
+    params:
+        name: str, name to be processed
+    return:
+        new_name: str, extracted name
+    """
+    name, suffix = path.splitext(name)
+    c_pattern = "[\u4e00-\u9fff]"
+    e_pattern = "[a-zA-Z]"
+    c_indices = [m.start(0) for m in re.finditer(c_pattern, name)]
+    e_indices = [m.start(0) for m in re.finditer(e_pattern, name)]
+
+    if en or len(c_indices) <= len(e_indices):
+        target, discard = e_indices, c_indices
+    else:
+        target, discard = c_indices, e_indices
+
+    if len(target) == 0:
+        return ""
+
+    first_target, last_target = target[0], target[-1]
+    first_discard = discard[0] if discard else -1
+    last_discard = discard[-1] if discard else -1
+    if last_discard < first_target:
+        new_name = name[first_target:]
+    elif last_target < first_discard:
+        new_name = name[:first_discard]
+    else:
+        new_name = map(lambda i: i[1] if i[0] not in discard else "", enumerate(name))
+        new_name = "".join(new_name)
+        new_name = "".join(new_name)
+    new_name = new_name.strip() + suffix
+    return new_name
+
+
 def get_videos(raw_path, store_path="", identifier=""):
     """
     传入视频名称或路径，构造一个包含视频路径和是否存在字幕信息的字典返回
