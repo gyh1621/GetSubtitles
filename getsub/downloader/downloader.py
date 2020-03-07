@@ -19,22 +19,6 @@ class Downloader(object):
     service_short_names = {"amazon prime": "amzn"}
 
     @classmethod
-    def num_to_cn(cls, number):
-
-        """ 转化 1-99 的数字至中文 """
-
-        assert number.isdigit() and 1 <= int(number) <= 99
-
-        trans_map = {n: c for n, c in zip(("123456789"), ("一二三四五六七八九"))}
-
-        if len(number) == 1:
-            return trans_map[number]
-        else:
-            part1 = "十" if number[0] == "1" else trans_map[number[0]] + "十"
-            part2 = trans_map[number[1]] if number[1] != "0" else ""
-            return part1 + part2
-
-    @classmethod
     def get_keywords(cls, video_name):
 
         """ 解析视频名

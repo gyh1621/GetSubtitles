@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import unittest
+from getsub.util import num_to_cn
 from getsub.downloader.downloader import Downloader
 
 
@@ -9,11 +10,11 @@ class TestDownloader(unittest.TestCase):
         """
         Test numbers converting to chinese.
         """
-        self.assertEqual(Downloader.num_to_cn("1"), "一")
-        self.assertEqual(Downloader.num_to_cn("10"), "十")
-        self.assertEqual(Downloader.num_to_cn("12"), "十二")
-        self.assertEqual(Downloader.num_to_cn("20"), "二十")
-        self.assertEqual(Downloader.num_to_cn("22"), "二十二")
+        self.assertEqual(num_to_cn("1"), "一")
+        self.assertEqual(num_to_cn("10"), "十")
+        self.assertEqual(num_to_cn("12"), "十二")
+        self.assertEqual(num_to_cn("20"), "二十")
+        self.assertEqual(num_to_cn("22"), "二十二")
 
     def test_get_keywords(self):
         """

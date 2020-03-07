@@ -57,8 +57,12 @@ class TestSubDownloaders(unittest.TestCase):
             _check_format(result, dname)
 
             # test download
-            link = list(result.values())[0]["link"]
-            data_type, sub_date_bytes, _ = downloader().download_file("", link)
+            sub_info = list(result.values())[0]
+            link = sub_info["link"]
+            session = sub_info["session"]
+            data_type, sub_date_bytes, _ = downloader().download_file(
+                "", link, session=session
+            )
             self.assertIsNotNone(sub_date_bytes, dname + " fails downloading file")
 
 

@@ -39,6 +39,22 @@ class ProgressBar:
         print(info, end=end_str)
 
 
+def num_to_cn(number):
+    """
+    转化 1-99 的数字至中文
+    """
+    assert number.isdigit() and 1 <= int(number) <= 99
+
+    trans_map = {n: c for n, c in zip(("123456789"), ("一二三四五六七八九"))}
+
+    if len(number) == 1:
+        return trans_map[number]
+    else:
+        part1 = "十" if number[0] == "1" else trans_map[number[0]] + "十"
+        part2 = trans_map[number[1]] if number[1] != "0" else ""
+        return part1 + part2
+
+
 def extract_name(name, en=False):
     """
     提取文字
@@ -242,13 +258,15 @@ def choose_subtitle(subtitles):
     return subtitles[choice]
 
 
-def _compute_subtitle_score(video_detail, subname):
+def compute_subtitle_score(video_detail, subname, match_episode=True):
     """
     计算字幕分数
 
     params:
         video_detail: dict, result of guessit
         subname: str
+        match_episode: bool, whether episode number
+                       needed to match if video is a TV show
     return:
         score: int, return -1 if not match with videos
     """
@@ -280,7 +298,9 @@ def _compute_subtitle_score(video_detail, subname):
             return -1
     else:
         if video_name == sub_title:
-            if not (season == sub_season and episode == sub_episode):
+            if season != sub_season:
+                return -1  # title match, season not match
+            elif episode != sub_episode and match_episode:
                 return -1  # title match, episode not match
             else:
                 score += 1  # title and episode match
@@ -334,7 +354,7 @@ def guess_subtitle(sublist, video_detail):
             subname = subname.encode("cp437").decode("gbk")
         except Exception:
             pass
-        score = _compute_subtitle_score(video_detail, subname)
+        score = compute_subtitle_score(video_detail, subname)
         scores.append(score)
 
     max_score = max(scores)

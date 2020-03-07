@@ -2,7 +2,7 @@
 
 import unittest
 
-from getsub.util import guess_subtitle, _compute_subtitle_score
+from getsub.util import guess_subtitle, compute_subtitle_score
 
 
 class TestGuessSubtitle(unittest.TestCase):
@@ -24,6 +24,7 @@ class TestGuessSubtitle(unittest.TestCase):
         ("the.flash.s10e01.web.h264-tbs.chs.srt", -1),
         ("the.flash.s01e01.web.h264-tbs.chs.srt", -1),
     )
+    test_episode_package = (("the.walking.dead.S10.1080p.BluRay.x265.zip", 1),)
 
     test_movie_info = {"title": "Pulp Fiction", "year": 1994, "type": "movie"}
     test_movie_subs = (
@@ -49,12 +50,23 @@ class TestGuessSubtitle(unittest.TestCase):
     def test_compute_subtitle_score(self):
         for test_sub, score in TestGuessSubtitle.test_episode_subs:
             self.assertEqual(
-                _compute_subtitle_score(TestGuessSubtitle.test_episode_info, test_sub),
+                compute_subtitle_score(TestGuessSubtitle.test_episode_info, test_sub),
                 score,
             )
         for test_sub, score in TestGuessSubtitle.test_movie_subs:
             self.assertEqual(
-                _compute_subtitle_score(TestGuessSubtitle.test_movie_info, test_sub),
+                compute_subtitle_score(TestGuessSubtitle.test_movie_info, test_sub),
+                score,
+            )
+
+    def test_compute_subtitle_score_not_match_episode(self):
+        for test_package, score in TestGuessSubtitle.test_episode_package:
+            self.assertEqual(
+                compute_subtitle_score(
+                    TestGuessSubtitle.test_episode_info,
+                    test_package,
+                    match_episode=False,
+                ),
                 score,
             )
 
