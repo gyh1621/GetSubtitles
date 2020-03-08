@@ -24,11 +24,11 @@ class SubHDDownloader(Downloader):
     site_url = "http://subhd.la"
     search_url = "http://subhd.la/search/"
 
-    def get_subtitles(self, video_name, sub_num=5):
+    def get_subtitles(self, video, sub_num=5):
 
         print("Searching SUBHD...", end="\r")
 
-        keywords, info_dict = Downloader.get_keywords(video_name)
+        keywords = Downloader.get_keywords(video)
         keyword = " ".join(keywords)
 
         sub_dict = order_dict()
@@ -57,7 +57,7 @@ class SubHDDownloader(Downloader):
 
                 for one_box in results:
 
-                    if info_dict["type"] == "movie" and not one_box.find(
+                    if video.info["type"] == "movie" and not one_box.find(
                         "div", class_="px-1 rounded-sm bg-danger text-white"
                     ):
                         continue

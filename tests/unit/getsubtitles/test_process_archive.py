@@ -11,19 +11,18 @@ import rarfile
 
 from tests import create_test_directory
 from tests.unit import assets_path
-from getsub.util import process_archive
+from tests.unit.getsubtitles import get_function as get_f
+from getsub.models import Video
+
+
+def get_function(**kwargs):
+    return get_f("process_archive", **kwargs)
 
 
 class TestProcessArchive(unittest.TestCase):
 
     test_dir = "testPA"
-
-    test_video_info = {
-        "video_path": test_dir,
-        "store_path": test_dir,
-        "has_subtitle": False,
-    }
-
+    test_video = Video(path.join(test_dir, "video.mkv"), test_dir)
     test_dir_structure = {}
 
     def tearDown(self):
@@ -31,22 +30,32 @@ class TestProcessArchive(unittest.TestCase):
             shutil.rmtree(TestProcessArchive.test_dir)
 
     def test_unsupported_archive(self):
-        err, subnames = process_archive("", {}, b"", ".tar")
+        process_archive = get_function()
+        err, subnames = process_archive(TestProcessArchive.test_video, b"", ".tar")
         self.assertEqual((err, subnames), ("unsupported file type .tar", []))
 
     def test_invalid_archive(self):
-        self.assertRaises(rarfile.BadRarFile, process_archive, "", {}, b"", ".7z")
+        process_archive = get_function()
+        self.assertRaises(
+            rarfile.BadRarFile,
+            process_archive,
+            TestProcessArchive.test_video,
+            b"",
+            ".7z",
+        )
 
     def test_empty_archive(self):
         with open(path.join(assets_path, "empty.zip"), "rb") as f:
             data = f.read()
-        err, subnames = process_archive("", {}, data, ".zip")
+        process_archive = get_function()
+        err, subnames = process_archive(TestProcessArchive.test_video, data, ".zip")
         self.assertEqual((err, subnames), ("no subtitle in this archive", []))
 
     def test_fail_guess(self):
         with open(path.join(assets_path, "archive.zip"), "rb") as f:
             data = f.read()
-        err, subnames = process_archive("test.mkv", {}, data, ".zip")
+        process_archive = get_function()
+        err, subnames = process_archive(TestProcessArchive.test_video, data, ".zip")
         self.assertEqual((err, subnames), ("no guess result in auto mode", []))
 
     @mock.patch("builtins.input", side_effect=["1"])
@@ -57,9 +66,9 @@ class TestProcessArchive(unittest.TestCase):
         )
         with open(path.join(assets_path, "archive.zip"), "rb") as f:
             data = f.read()
-        err, subnames = process_archive(
-            "sub1.mkv", TestProcessArchive.test_video_info, data, ".zip", choose=True,
-        )
+        test_video = Video(path.join(TestProcessArchive.test_dir, "sub1.mkv"))
+        process_archive = get_function(single=True)
+        err, subnames = process_archive(test_video, data, ".zip")
         self.assertEqual((err, subnames), ("", [["dir1/sub1.ass", ".ass"]]))
 
     def test_save_both_subtitles_success(self):
@@ -69,9 +78,9 @@ class TestProcessArchive(unittest.TestCase):
         )
         with open(path.join(assets_path, "archive.zip"), "rb") as f:
             data = f.read()
-        err, subnames = process_archive(
-            "sub.mkv", TestProcessArchive.test_video_info, data, ".zip", both=True,
-        )
+        test_video = Video(path.join(TestProcessArchive.test_dir, "sub.mkv"))
+        process_archive = get_function(both=True)
+        err, subnames = process_archive(test_video, data, ".zip")
         self.assertTrue(
             "sub.ass" in os.listdir(TestProcessArchive.test_dir)
             and "sub.srt" in os.listdir(TestProcessArchive.test_dir)
@@ -84,9 +93,9 @@ class TestProcessArchive(unittest.TestCase):
         )
         with open(path.join(assets_path, "archive.zip"), "rb") as f:
             data = f.read()
-        err, subnames = process_archive(
-            "sub1.mkv", TestProcessArchive.test_video_info, data, ".zip", both=True,
-        )
+        process_archive = get_function(both=True)
+        test_video = Video(path.join(TestProcessArchive.test_dir, "sub1.mkv"))
+        err, subnames = process_archive(test_video, data, ".zip")
         self.assertTrue(
             "sub1.ass" in os.listdir(TestProcessArchive.test_dir)
             and "sub1.srt" not in os.listdir(TestProcessArchive.test_dir)
@@ -101,9 +110,9 @@ class TestProcessArchive(unittest.TestCase):
         )
         with open(path.join(assets_path, "archive.zip"), "rb") as f:
             data = f.read()
-        err, subnames = process_archive(
-            "sub1.mkv", TestProcessArchive.test_video_info, data, ".zip", both=True,
-        )
+        process_archive = get_function(both=True)
+        test_video = Video(path.join(TestProcessArchive.test_dir, "sub1.mkv"))
+        err, subnames = process_archive(test_video, data, ".zip")
         self.assertTrue(
             "sub1.ass" in os.listdir(TestProcessArchive.test_dir)
             and "sub1.srt" not in os.listdir(TestProcessArchive.test_dir)
@@ -118,13 +127,11 @@ class TestProcessArchive(unittest.TestCase):
         )
         with open(path.join(assets_path, "archive.zip"), "rb") as f:
             data = f.read()
-        err, subnames = process_archive(
-            "sub1.mkv",
-            TestProcessArchive.test_video_info,
-            data,
-            ".zip",
-            identifier=".zh",
+        process_archive = get_function()
+        test_video = Video(
+            path.join(TestProcessArchive.test_dir, "sub1.mkv"), identifier=".zh"
         )
+        err, subnames = process_archive(test_video, data, ".zip")
         self.assertTrue(
             "sub1.ass" in os.listdir(TestProcessArchive.test_dir)
             and "sub1.zh.ass" in os.listdir(TestProcessArchive.test_dir)

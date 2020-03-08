@@ -8,7 +8,6 @@ import re
 import copy
 import requests
 from bs4 import BeautifulSoup
-from guessit import guessit
 
 from getsub.constants import SUB_FORMATS
 from getsub.downloader.downloader import Downloader
@@ -26,13 +25,12 @@ class ZimukuDownloader(Downloader):
     site_url = "http://www.zimuku.la"
     search_url = "http://www.zimuku.la/search?q="
 
-    def get_keywords(self, video_name):
-        info = guessit(video_name)
-        if info["type"] == "episode":
-            keywords = [info["title"], "s%s" % str(info["season"]).zfill(2)]
-            return keywords, info
+    def get_keywords(self, video):
+        if video.info["type"] == "episode":
+            keywords = [video.info["title"], "s%s" % str(video.info["season"]).zfill(2)]
+            return keywords
         else:  # TODO: examine movies' search results
-            return super().get_keywords(video_name)
+            return super().get_keywords(video)
 
     def _parse_episode_page(self, session, link, info, match_episode=True):
         """
@@ -43,7 +41,7 @@ class ZimukuDownloader(Downloader):
             info: dict, result of guessit
         return:
             subs: OrderedDict, format same as get_subtitles
-                  sorted in ascending order of scores,
+                  sorted in ascending order of scores
         """
 
         def _get_archive_dowload_link(sub_page_link):
@@ -130,11 +128,12 @@ class ZimukuDownloader(Downloader):
         }
         return sub
 
-    def get_subtitles(self, video_name, sub_num=10):
+    def get_subtitles(self, video, sub_num=10):
 
         print("Searching ZIMUKU...", end="\r")
 
-        keywords, info_dict = self.get_keywords(video_name)
+        keywords = self.get_keywords(video)
+        info_dict = video.info
 
         s = requests.session()
         s.headers.update(Downloader.header)

@@ -5,6 +5,7 @@ import inspect
 import importlib
 import unittest
 
+from getsub.models import Video
 from getsub.downloader.downloader import Downloader
 
 
@@ -52,7 +53,8 @@ class TestSubDownloaders(unittest.TestCase):
             )
 
             # test search
-            result = downloader().get_subtitles(test_name, sub_num=2)
+            video = Video(test_name)
+            result = downloader().get_subtitles(video, sub_num=2)
             self.assertEqual(len(result), 2, dname + " has wrong search result number")
             _check_format(result, dname)
 

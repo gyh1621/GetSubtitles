@@ -1,9 +1,6 @@
 # coding: utf-8
 
-from guessit import guessit
 from requests.utils import quote
-
-from getsub.util import extract_name
 
 
 class Downloader(object):
@@ -19,22 +16,18 @@ class Downloader(object):
     service_short_names = {"amazon prime": "amzn"}
 
     @classmethod
-    def get_keywords(cls, video_name):
+    def get_keywords(cls, video):
 
         """ 解析视频名
         Args:
-            video_name: 视频文件名
+            video: Video 对象
         Return:
             keywords: list
-            info_dict: guessit原始结果
         """
 
-        video_name = video_name.replace("[", "")
-        video_name = video_name.replace("]", "")
         keywords = []
-        video_name = extract_name(video_name)
-        info_dict = guessit(video_name)
 
+        info_dict = video.info
         title = info_dict["title"]
         keywords.append(title)
 
@@ -60,13 +53,13 @@ class Downloader(object):
 
         # 对关键字进行 URL 编码
         keywords = [quote(_keyword) for _keyword in keywords]
-        return keywords, info_dict
+        return keywords
 
-    def get_subtitles(self, video_name, sub_num=5):
+    def get_subtitles(self, video, sub_num=5):
 
         """ 搜索字幕
         Args:
-            video_name: 视频文件名
+            video：Video 对象
             sub_num: 字幕结果数，默认为5
         Return：
             字幕字典: 按语言值降序排列

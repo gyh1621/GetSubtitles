@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import unittest
+from getsub.models import Video
 from getsub.util import num_to_cn
 from getsub.downloader.downloader import Downloader
 
@@ -34,7 +35,8 @@ class TestDownloader(unittest.TestCase):
             ["La%20La%20Land", "2016", "Bluray", "HDChina", "1080p"],
         )
         for n, r in zip(names, results):
-            self.assertEqual(Downloader.get_keywords(n)[0], r)
+            video = Video(n)
+            self.assertEqual(Downloader.get_keywords(video), r)
 
 
 if __name__ == "__main__":

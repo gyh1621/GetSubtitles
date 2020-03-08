@@ -7,7 +7,22 @@ import unittest
 from os import path
 
 from tests import create_test_directory
-from getsub.util import get_videos
+from tests.unit.getsubtitles import get_function as get_f
+
+
+def get_function(**kwargs):
+    return get_f("get_videos", **kwargs)
+
+
+def videos_to_dict(videos):
+    video_dict = dict()
+    for video in videos:
+        video_dict[video.name + video.type] = {
+            "video_path": video.path,
+            "store_path": video.sub_store_path,
+            "has_subtitle": video.has_subtitle,
+        }
+    return video_dict
 
 
 class TestGetVideos(unittest.TestCase):
@@ -54,7 +69,7 @@ class TestGetVideos(unittest.TestCase):
     desired_result4 = {"file6.mkv": file6_result}
     # test single video name
     desired_result5 = {"file5.mkv": file5_result.copy()}
-    desired_result5["file5.mkv"]["video_path"] = "file5.mkv"
+    desired_result5["file5.mkv"]["video_path"] = os.getcwd()
     desired_result5["file5.mkv"]["store_path"] = os.getcwd()
     # test store path
     test_dir_structure2 = copy.deepcopy(test_dir_structure1)
@@ -80,45 +95,55 @@ class TestGetVideos(unittest.TestCase):
         desired_result["file1.mkv"]["has_subtitle"] = False
         desired_result["file4.mkv"]["has_subtitle"] = True
         desired_result["file6.mkv"]["has_subtitle"] = True
-        videos = get_videos(TestGetVideos.test_dir, identifier=".zh")
+        get_videos = get_function(plex=True)
+        videos = get_videos(TestGetVideos.test_dir)
+        videos = videos_to_dict(videos)
         self.assertDictEqual(videos, desired_result)
 
     def test_absolute_video_path(self):
         create_test_directory(
             TestGetVideos.test_dir_structure1, parent_dir=TestGetVideos.test_dir,
         )
+        get_videos = get_function()
         videos = get_videos(path.join(TestGetVideos.test_dir, "sub1", "file1.mkv"))
+        videos = videos_to_dict(videos)
         self.assertDictEqual(videos, TestGetVideos.desired_result2)
         videos = get_videos(path.join(TestGetVideos.test_dir, "file5.mkv"))
+        videos = videos_to_dict(videos)
         self.assertDictEqual(videos, TestGetVideos.desired_result3)
         videos = get_videos(path.join(TestGetVideos.test_dir, "file6.mkv"))
+        videos = videos_to_dict(videos)
         self.assertDictEqual(videos, TestGetVideos.desired_result4)
 
     def test_single_video_name(self):
         create_test_directory(
             TestGetVideos.test_dir_structure1, parent_dir=TestGetVideos.test_dir,
         )
+        get_videos = get_function()
         videos = get_videos("file5.mkv")
+        videos = videos_to_dict(videos)
         self.assertDictEqual(videos, TestGetVideos.desired_result5)
 
     def test_store_path(self):
         create_test_directory(
             TestGetVideos.test_dir_structure2, parent_dir=TestGetVideos.test_dir,
         )
-        videos = get_videos(
-            TestGetVideos.test_dir,
-            store_path=path.join(TestGetVideos.test_dir, "storepath"),
+        get_videos = get_function(
+            sub_path=path.join(TestGetVideos.test_dir, "storepath")
         )
+        videos = get_videos(TestGetVideos.test_dir)
+        videos = videos_to_dict(videos)
         self.assertDictEqual(videos, (TestGetVideos.desired_result6))
 
     def test_invalid_store_path(self):
         create_test_directory(
             TestGetVideos.test_dir_structure1, parent_dir=TestGetVideos.test_dir,
         )
-        videos = get_videos(
-            TestGetVideos.test_dir,
-            store_path=path.join(TestGetVideos.test_dir, "unexisted_dir"),
+        get_videos = get_function(
+            sub_path=path.join(TestGetVideos.test_dir, "unexisted_dir")
         )
+        videos = get_videos(TestGetVideos.test_dir)
+        videos = videos_to_dict(videos)
         self.assertDictEqual(videos, (TestGetVideos.desired_result1))
 
 

@@ -22,11 +22,11 @@ class ZimuzuDownloader(Downloader):
     site_url = "http://www.rrys2019.com"
     search_url = "http://www.rrys2019.com/search?keyword={0}&type=subtitle"
 
-    def get_subtitles(self, video_name, sub_num=5):
+    def get_subtitles(self, video, sub_num=5):
 
         print("Searching ZIMUZU...", end="\r")
 
-        keywords, info_dict = Downloader.get_keywords(video_name)
+        keywords = Downloader.get_keywords(video)
         keyword = " ".join(keywords)
 
         sub_dict = order_dict()
@@ -47,7 +47,7 @@ class ZimuzuDownloader(Downloader):
                         + one_box.find("strong", {"class": "list_title"}).text
                     )
 
-                    if info_dict["type"] == "movie" and "美剧字幕" in sub_name:
+                    if video.info["type"] == "movie" and "美剧字幕" in sub_name:
                         continue
 
                     a = one_box.find("a")
