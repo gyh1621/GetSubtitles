@@ -104,11 +104,11 @@ class SubHDDownloader(Downloader):
         sid = sub_url.split("/")[-1]
         r = session.get(sub_url)
         bs_obj = BeautifulSoup(r.text, "html.parser")
-        dtoken = bs_obj.find("button", {"id": "down"})["dtoken"]
+        dtoken = bs_obj.find("button", {"id": "down"})["dtoken1"]
 
         r = session.post(
             SubHDDownloader.site_url + "/ajax/down_ajax",
-            data={"sub_id": sid, "dtoken": dtoken},
+            data={"sub_id": sid, "dtoken1": dtoken},
         )
 
         content = r.content.decode("unicode-escape")
