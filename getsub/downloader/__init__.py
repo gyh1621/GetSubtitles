@@ -1,14 +1,13 @@
 # coding: utf-8
 
 
-from getsub.downloader.subhd import SubHDDownloader
 from getsub.downloader.zimuzu import ZimuzuDownloader
 from getsub.downloader.zimuku import ZimukuDownloader
 
 
 class DownloaderManager:
 
-    downloaders = (SubHDDownloader(), ZimuzuDownloader(), ZimukuDownloader())
+    downloaders = (ZimukuDownloader(), ZimuzuDownloader())
     downloader_names = [d.__class__.name for d in downloaders]
 
     @classmethod

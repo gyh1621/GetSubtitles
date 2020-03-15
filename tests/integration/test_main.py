@@ -179,7 +179,9 @@ class TestMain(unittest.TestCase):
             "the.flash.s01e01.mkv": None,
         }
         create_test_directory(dir_structure, TestMain.test_dir)
-        args = TestMain.build_args({"name": TestMain.test_dir, "more": True})
+        args = TestMain.build_args(
+            {"name": TestMain.test_dir, "more": True, "downloader": "zimuzu"}
+        )
         result = GetSubtitles(**args).start()
         self.assertTrue(result["success"], 1)
         files = os.listdir(TestMain.test_dir)
