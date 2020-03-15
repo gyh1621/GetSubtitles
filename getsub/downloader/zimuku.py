@@ -64,15 +64,6 @@ class ZimukuDownloader(Downloader):
             a = sub.find("a")
             name = extract_name(a.text, en=True)
 
-            # TODO: download single subtitle
-            is_sub = False
-            for sub_format in SUB_FORMATS:
-                if sub_format in name:
-                    is_sub = True
-                    break
-            if is_sub:
-                continue
-
             score = compute_subtitle_score(info, name, match_episode=match_episode)
             if score == -1:
                 continue
@@ -218,5 +209,9 @@ class ZimukuDownloader(Downloader):
             datatype = ".7z"
         else:
             datatype = "Unknown"
+            for sub_type in SUB_FORMATS:
+                if sub_type in filename:
+                    datatype = sub_type
+                    break
 
         return datatype, sub_data_bytes, ""

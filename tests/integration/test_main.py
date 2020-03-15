@@ -3,9 +3,11 @@ import copy
 import shutil
 import unittest
 from os import path
+from unittest import mock
 
 from tests import create_test_directory
 from getsub.main import GetSubtitles
+from getsub.constants import SUB_FORMATS
 
 
 class TestMain(unittest.TestCase):
@@ -183,6 +185,25 @@ class TestMain(unittest.TestCase):
         files = os.listdir(TestMain.test_dir)
         types = set([path.splitext(file)[1] for file in files])
         self.assertTrue(".rar" in types or ".zip" in types or ".7z" in types)
+
+    @mock.patch("getsub.constants.ARCHIVE_TYPES", [])
+    def test_download_subtitles(self):
+        print("===============================")
+        print("=== Test download subtitles ===")
+        print("===============================")
+        # zimuku should have subtitle results for this video
+        video_name, video_type = (
+            "Young.Sheldon.S03E15.1080p.WEB.x264-XLF[rarbg]",
+            ".mkv",
+        )
+        dir_structure = {video_name + video_type: None}
+        create_test_directory(dir_structure, TestMain.test_dir)
+        args = TestMain.build_args({"name": TestMain.test_dir, "downloader": "zimuku"})
+        result = GetSubtitles(**args).start()
+        self.assertTrue(result["success"], 1)
+        files = os.listdir(TestMain.test_dir)
+        possible_subs = [video_name + sub_type for sub_type in SUB_FORMATS]
+        self.assertTrue(set(files).intersection(possible_subs))
 
 
 if __name__ == "__main__":

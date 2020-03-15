@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import os
 from os.path import basename, dirname, abspath
 from os.path import exists, join, splitext
 
@@ -28,3 +29,13 @@ class Video:
         )
         self.extracted_name = extract_name(self.name)
         self.info = guessit(self.extracted_name + self.type)
+
+    def delete_existed_subtitles(self):
+        if not self.has_subtitle:
+            return
+        for one_sub_type in SUB_FORMATS:
+            delete_name = self.name + self.sub_identifier + one_sub_type
+            delete_file = join(self.sub_store_path, delete_name)
+
+            if exists(delete_file):
+                os.remove(delete_file)

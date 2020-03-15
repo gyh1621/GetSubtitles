@@ -182,12 +182,7 @@ class GetSubtitles(object):
                 print("no %s subtitles in this archive" % another_sub_type)
 
         # delete existed subtitles
-        for one_sub_type in SUB_FORMATS:
-            delete_name = video.name + video.sub_identifier + one_sub_type
-            delete_file = path.join(video.sub_store_path, delete_name)
-
-            if path.exists(delete_file):
-                os.remove(delete_file)
+        video.delete_existed_subtitles()
 
         # extract subtitles
         for one_sub, one_sub_type in extract_subs:
@@ -196,6 +191,44 @@ class GetSubtitles(object):
             with open(extract_path, "wb") as sub:
                 file_handler = sub_lists_dict[one_sub]
                 sub.write(file_handler.read(one_sub))
+
+        return error, extract_subs
+
+    def process_subtitle(self, video, sub_data, datatype):
+
+        # delete existed subtitles
+        video.delete_existed_subtitles()
+
+        # save subtitle
+        sub_name = video.name + video.sub_identifier + datatype
+        extract_path = path.join(video.sub_store_path, sub_name)
+        with open(extract_path, "wb") as sub:
+            sub.write(sub_data)
+
+        extract_subs = [[sub_name, datatype]]
+        return "", extract_subs
+
+    def process_result(self, video, chosen_sub, link, session):
+
+        # download archive
+        choice_prefix = chosen_sub[: chosen_sub.find("]") + 1]
+        downloader = DownloaderManager.get_downloader_by_choice_prefix(choice_prefix)
+        datatype, data, error = downloader.download_file(
+            chosen_sub, link, session=session
+        )
+        if error:
+            return error, []
+
+        # process archive or subtitles downloaded
+        if datatype in ARCHIVE_TYPES:
+            error, extract_subs = self.process_archive(video, data, datatype)
+        elif datatype in SUB_FORMATS:
+            error, extract_subs = self.process_subtitle(video, data, datatype)
+        else:
+            error = "unsupported file type " + datatype
+
+        if error:
+            return error, []
 
         for extract_sub_name, extract_sub_type in extract_subs:
             extract_sub_name = extract_sub_name.split("/")[-1]
@@ -209,36 +242,19 @@ class GetSubtitles(object):
                 print("\nExtracted:", extract_sub_name)
             except UnicodeDecodeError:
                 print("\nExtracted:".encode("gbk"), extract_sub_name.encode("gbk"))
-        return error, extract_subs
-
-    def process_result(self, video, chosen_sub, link, session):
-
-        # download archive
-        choice_prefix = chosen_sub[: chosen_sub.find("]") + 1]
-        downloader = DownloaderManager.get_downloader_by_choice_prefix(choice_prefix)
-        datatype, archive_data, error = downloader.download_file(
-            chosen_sub, link, session=session
-        )
-        if error:
-            return error, []
-
-        # process archive
-        error, extract_sub_names = self.process_archive(video, archive_data, datatype,)
-        if error:
-            return error, []
 
         # save original archive
-        if self.more:
+        if self.more and datatype in ARCHIVE_TYPES:
             archive_path = path.join(video.sub_store_path, chosen_sub + datatype)
             with open(archive_path, "wb") as f:
-                f.write(archive_data)
+                f.write(data)
             print("save original file.")
 
-        return "", extract_sub_names
+        return "", extract_subs
 
     def process_video(self, video):
 
-        extract_sub_names = []
+        extract_subs = []
 
         sub_dict = self.get_search_results(video)
 
@@ -247,7 +263,7 @@ class GetSubtitles(object):
             return error, []
 
         # 遍历字幕包直到有猜测字幕
-        while not extract_sub_names and len(sub_dict) > 0:
+        while not extract_subs and len(sub_dict) > 0:
             exit, chosen_sub = choose_archive(
                 sub_dict, sub_num=self.sub_num, query=self.query
             )
@@ -255,7 +271,7 @@ class GetSubtitles(object):
                 break
 
             try:
-                error, extract_sub_names = self.process_result(
+                error, extract_subs = self.process_result(
                     video,
                     chosen_sub,
                     sub_dict[chosen_sub]["link"],
@@ -268,7 +284,7 @@ class GetSubtitles(object):
             finally:
                 sub_dict.pop(chosen_sub)
 
-        return "", extract_sub_names
+        return "", extract_subs
 
     def start(self):
 
@@ -289,8 +305,8 @@ class GetSubtitles(object):
                 continue
 
             try:
-                extract_sub_names, error = [], ""
-                error, extract_sub_names = self.process_video(video)
+                extract_subs, error = [], ""
+                error, extract_subs = self.process_video(video)
                 self.s_error = error
             except rarfile.RarCannotExec:
                 self.s_error += "Unrar not installed?"
@@ -299,7 +315,7 @@ class GetSubtitles(object):
                 self.f_error += format_exc()
 
             # no guessed subtitle in auto mode
-            if not extract_sub_names and not error:
+            if not extract_subs and not error:
                 self.s_error += " failed to guess one subtitle,"
                 self.s_error += "use '-q' to try query mode."
 
