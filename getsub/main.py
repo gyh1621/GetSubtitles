@@ -10,6 +10,7 @@ from traceback import format_exc
 
 from requests import exceptions
 
+from getsub import user_config_path
 from getsub.__version__ import __version__
 from getsub.constants import SUB_FORMATS, VIDEO_FORMATS, ARCHIVE_TYPES
 from getsub.downloader import Downloader
@@ -422,8 +423,18 @@ def main():
         action="store_true",
         help="add .zh to the subtitle's name for plex to recognize",
     )
+    arg_parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version="version: " + __version__ + "\nconfig: " + user_config_path,
+    )
 
     args = arg_parser.parse_args()
+
+    if args.version:
+        print("Version:", __version__)
+        print("config path:", user_config_path)
 
     if args.over:
         print("\nThe script will replace the old subtitles if exist...\n")
