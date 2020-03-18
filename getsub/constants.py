@@ -3,6 +3,8 @@
 SUB_FORMATS = [".ass", ".srt", ".ssa", ".sub"]
 ARCHIVE_TYPES = [".zip", ".rar", ".7z"]
 
+SERVICE_SHORT_NAMES = {"amazon prime": "amzn"}
+
 VIDEO_FORMATS = [
     ".webm",
     ".mkv",

@@ -21,7 +21,7 @@ class TestMain(unittest.TestCase):
         both=False,
         over=False,
         plex=False,
-        debug=False,
+        debug=True,
         sub_num=None,
         downloader=None,
         sub_path="",
@@ -209,4 +209,4 @@ class TestMain(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main(warnings="ignore")

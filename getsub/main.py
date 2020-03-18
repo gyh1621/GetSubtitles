@@ -12,7 +12,7 @@ from requests import exceptions
 
 from getsub.__version__ import __version__
 from getsub.constants import SUB_FORMATS, VIDEO_FORMATS, ARCHIVE_TYPES
-from getsub.downloader import DownloaderManager
+from getsub.downloader import Downloader
 from getsub.util import choose_archive, choose_subtitle, get_file_list, guess_subtitle
 from getsub.models import Video
 
@@ -45,17 +45,17 @@ class GetSubtitles(object):
         self.s_error = ""
         self.f_error = ""
         if not downloader:
-            self.downloader = DownloaderManager.downloaders
+            self.downloader = Downloader.get_downloaders()
         else:
-            if downloader not in DownloaderManager.downloader_names:
+            downloader = Downloader.get_downloader_by_name(downloader)
+            if not downloader:
                 print(
-                    "\nNO SUCH DOWNLOADER:",
-                    "PLEASE CHOOSE FROM",
-                    ", ".join(DownloaderManager.downloader_names),
+                    "\nNO SUCH DOWNLOADER: PLEASE CHOOSE FROM",
+                    ", ".join(Downloader.get_downloader_names()),
                     "\n",
                 )
                 sys.exit(1)
-            self.downloader = [DownloaderManager.get_downloader_by_name(downloader)]
+            self.downloader = [downloader]
         self.failed_list = []  # [{'name', 'path', 'error', 'trace_back'}
         self.sub_identifier = "" if not self.plex else ".zh"
         self.sub_store_path = sub_path.replace('"', "")
@@ -212,7 +212,7 @@ class GetSubtitles(object):
 
         # download archive
         choice_prefix = chosen_sub[: chosen_sub.find("]") + 1]
-        downloader = DownloaderManager.get_downloader_by_choice_prefix(choice_prefix)
+        downloader = Downloader.get_downloader_by_choice_prefix(choice_prefix)
         datatype, data, error = downloader.download_file(
             chosen_sub, link, session=session
         )
@@ -412,7 +412,7 @@ def main():
         "-d",
         "--downloader",
         action="store",
-        help="choose downloader from " + ", ".join(DownloaderManager.downloader_names),
+        help="choose downloader from " + ", ".join(Downloader.get_downloader_names()),
     )
     arg_parser.add_argument(
         "--debug", action="store_true", help="show more info of the error"

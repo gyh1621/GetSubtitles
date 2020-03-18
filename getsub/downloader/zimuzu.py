@@ -7,7 +7,7 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
-from getsub.downloader.downloader import Downloader
+from getsub.downloader import Downloader
 from getsub.util import ProgressBar
 
 

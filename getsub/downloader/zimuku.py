@@ -10,7 +10,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from getsub.constants import SUB_FORMATS
-from getsub.downloader.downloader import Downloader
+from getsub.downloader import Downloader
 from getsub.util import ProgressBar, extract_name, compute_subtitle_score, num_to_cn
 
 

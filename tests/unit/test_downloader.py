@@ -3,7 +3,7 @@
 import unittest
 from getsub.models import Video
 from getsub.util import num_to_cn
-from getsub.downloader.downloader import Downloader
+from getsub.downloader import Downloader
 
 
 class TestDownloader(unittest.TestCase):
