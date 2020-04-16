@@ -8,6 +8,7 @@ import re
 import copy
 import requests
 from bs4 import BeautifulSoup
+from guessit import guessit
 
 from getsub.constants import SUB_FORMATS
 from getsub.downloader.downloader import Downloader
@@ -146,7 +147,15 @@ class ZimukuDownloader(Downloader):
                     title_a = item.find("p", class_="tt clearfix").find("a")
                     if info_dict["type"] == "episode":
                         title = title_a.text
-                        season_cn1 = re.search("第(.*)季", title).group(1).strip()
+                        try:
+                            season_cn1 = re.search("第(.*)季", title).group(1).strip()
+                        except AttributeError:
+                            # try getting season from subtitles
+                            sample_title = (
+                                item.find("td", class_="first").find("a").get("title")
+                            )
+                            sample_dict = guessit(extract_name(sample_title, en=True))
+                            season_cn1 = num_to_cn(str(sample_dict["season"]))
                         season_cn2 = num_to_cn(str(info_dict["season"]))
                         if season_cn1 != season_cn2:
                             continue

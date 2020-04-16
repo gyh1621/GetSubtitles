@@ -19,6 +19,13 @@ class TestZimuku(unittest.TestCase):
         results = ZimukuDownloader().get_subtitles(video, sub_num=1)
         self.assertEqual(len(results), 1)
 
+    def test_get_season_from_subtitle(self):
+        # from issue #68 and pr #66
+        video_name = "The.Morning.Show.S01E01.mkv"
+        video = Video(video_name)
+        results = ZimukuDownloader().get_subtitles(video, sub_num=1)
+        self.assertEqual(len(results), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
