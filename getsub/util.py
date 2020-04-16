@@ -87,9 +87,21 @@ def extract_name(name, en=False):
     elif last_target < first_discard:
         new_name = name[:first_discard]
     else:
-        new_name = map(lambda i: i[1] if i[0] not in discard else "", enumerate(name))
-        new_name = "".join(new_name)
-        new_name = "".join(new_name)
+        # try to find maximum continous part
+        result, start, end = [0, 1], -1, 0
+        while end < len(name):
+            while end not in e_indices and end < len(name):
+                end += 1
+            if end == len(name):
+                break
+            start = end
+            while end not in c_indices and end < len(name):
+                end += 1
+            if end - start > result[1] - result[0]:
+                result = [start, end]
+            start = end
+            end += 1
+        new_name = name[result[0] : result[1]]
     new_name = new_name.strip() + suffix
     return new_name
 
