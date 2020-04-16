@@ -1,6 +1,6 @@
 # coding: utf-8
 
-SUB_FORMATS = [".ass", ".srt", ".ssa", ".sub"]
+SUB_FORMATS = [".ass", ".srt", ".ssa", ".sub", ".sup"]
 ARCHIVE_TYPES = [".zip", ".rar", ".7z"]
 
 VIDEO_FORMATS = [
