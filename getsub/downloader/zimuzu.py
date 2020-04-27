@@ -90,7 +90,7 @@ class ZimuzuDownloader(Downloader):
         a = bs_obj.find("div", {"class": "subtitle-links"}).a
         download_link = a.attrs["href"]
         header["Referer"] = download_link
-        ajax_url = "http://got001.com/api/v1/static/subtitle/detail?"
+        ajax_url = "http://got002.com/api/v1/static/subtitle/detail?"
         ajax_url += download_link.split("?")[-1]
         r = s.get(ajax_url, headers=header)
         json_obj = json.loads(r.text)
