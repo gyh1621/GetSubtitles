@@ -130,44 +130,36 @@ def _print_and_choose(items):
     return choice
 
 
-def choose_archive(sub_dict, sub_num=5, query=True):
+def choose_archive(search_results, sub_num=5, query=True):
     """
-    传入候选字幕字典，返回选择的字幕包名称，字幕包下载地址
+    Choose one search result
 
     params:
-        sub_dict: dict, check downloader.py
+        search_results: list of SearchResult
         sub_num: int, maximum number of subtitles
         query: bool, return first sub if False
     return:
         exit: bool
-        chosen_subs: str, subtitle name
+        chosen_result: SearchResult
     """
 
     exit = False
 
     if not query:
-        chosen_sub = list(sub_dict.keys())[0]
-        return exit, chosen_sub
+        return exit, search_results[0]
 
-    items = []
-    items.append("Exit. Not downloading any subtitles.")
-    for i, key in enumerate(sub_dict.keys()):
+    items = ["Exit. Not downloading any subtitles."]
+    for i, result in enumerate(search_results):
         if i == sub_num:
             break
-        lang_info = ""
-        lang_info += "【简】" if 4 & sub_dict[key]["lan"] else "      "
-        lang_info += "【繁】" if 2 & sub_dict[key]["lan"] else "      "
-        lang_info += "【英】" if 1 & sub_dict[key]["lan"] else "      "
-        lang_info += "【双】" if 8 & sub_dict[key]["lan"] else "      "
-        sub_info = "%s  %s" % (lang_info, key)
-        items.append(sub_info)
+        items.append(str(result))
 
     choice = _print_and_choose(items)
     if choice == 0:
         exit = True
-        return exit, []
+        return exit, None
 
-    return exit, list(sub_dict.keys())[choice - 1]
+    return exit, search_results[choice - 1]
 
 
 def choose_subtitle(subtitles):

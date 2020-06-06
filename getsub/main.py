@@ -14,7 +14,7 @@ from getsub.__version__ import __version__
 from getsub.constants import SUB_FORMATS, VIDEO_FORMATS, ARCHIVE_TYPES
 from getsub.downloader import DownloaderManager
 from getsub.util import choose_archive, choose_subtitle, get_file_list, guess_subtitle
-from getsub.models import Video
+from getsub.models import Video, SearchResult, Language, Subtitle
 
 
 class GetSubtitles(object):
@@ -112,11 +112,11 @@ class GetSubtitles(object):
         return videos
 
     def get_search_results(self, video):
-        results = OrderedDict()
+        results = []
         for i, downloader in enumerate(self.downloader):
             try:
-                result = downloader.get_subtitles(video, sub_num=self.sub_num)
-                results.update(result)
+                new_results = downloader.get_subtitles(video, sub_num=self.sub_num)
+                results += new_results
             except ValueError as e:
                 print("error: " + str(e))
             except (exceptions.Timeout, exceptions.ConnectionError):
@@ -208,14 +208,12 @@ class GetSubtitles(object):
         extract_subs = [[sub_name, datatype]]
         return "", extract_subs
 
-    def process_result(self, video, chosen_sub, link, session):
-
+    def process_result(self, video, chosen_result):
         # download archive
-        choice_prefix = chosen_sub[: chosen_sub.find("]") + 1]
-        downloader = DownloaderManager.get_downloader_by_choice_prefix(choice_prefix)
-        datatype, data, error = downloader.download_file(
-            chosen_sub, link, session=session
+        downloader = DownloaderManager.get_downloader_by_name(
+            chosen_result.downloader_name
         )
+        datatype, data, error = downloader.download_file(chosen_result)
         if error:
             return error, []
 
@@ -245,7 +243,9 @@ class GetSubtitles(object):
 
         # save original archive
         if self.more and datatype in ARCHIVE_TYPES:
-            archive_path = path.join(video.sub_store_path, chosen_sub + datatype)
+            archive_path = path.join(
+                video.sub_store_path, chosen_result.subtitle.name + datatype
+            )
             with open(archive_path, "wb") as f:
                 f.write(data)
             print("save original file.")
@@ -256,33 +256,30 @@ class GetSubtitles(object):
 
         extract_subs = []
 
-        sub_dict = self.get_search_results(video)
+        results = self.get_search_results(video)
 
-        if len(sub_dict) == 0:
+        if len(results) == 0:
             error = "no search results. "
             return error, []
 
+        # TODOTHISTIME: sort results
+
         # 遍历字幕包直到有猜测字幕
-        while not extract_subs and len(sub_dict) > 0:
-            exit, chosen_sub = choose_archive(
-                sub_dict, sub_num=self.sub_num, query=self.query
+        while not extract_subs and len(results) > 0:
+            exit, chosen_result = choose_archive(
+                results, sub_num=self.sub_num, query=self.query
             )
             if exit:
                 break
 
             try:
-                error, extract_subs = self.process_result(
-                    video,
-                    chosen_sub,
-                    sub_dict[chosen_sub]["link"],
-                    sub_dict[chosen_sub]["session"],
-                )
+                error, extract_subs = self.process_result(video, chosen_result)
                 if error:
                     print("error: " + error + "\n")
             except Exception as e:
                 print("error:" + str(e))
             finally:
-                sub_dict.pop(chosen_sub)
+                results.remove(chosen_result)
 
         return "", extract_subs
 

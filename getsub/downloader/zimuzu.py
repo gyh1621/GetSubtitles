@@ -7,6 +7,7 @@ import json
 import requests
 from bs4 import BeautifulSoup
 
+from getsub.models import Subtitle, Language, SearchResult
 from getsub.downloader.downloader import Downloader
 from getsub.util import ProgressBar
 
@@ -29,7 +30,7 @@ class ZimuzuDownloader(Downloader):
         keywords = Downloader.get_keywords(video)
         keyword = " ".join(keywords)
 
-        sub_dict = order_dict()
+        results = []
         s = requests.session()
         while True:
             # 当前关键字查询
@@ -42,28 +43,42 @@ class ZimuzuDownloader(Downloader):
             tab_text = bs_obj.find("div", {"class": "article-tab"}).text
             if "字幕(0)" not in tab_text:
                 for one_box in bs_obj.find_all("div", {"class": "search-item"}):
-                    sub_name = (
-                        ZimuzuDownloader.choice_prefix
-                        + one_box.find("strong", {"class": "list_title"}).text
-                    )
+                    version = one_box.find("span", {"class": "f4"})
+                    if version:
+                        sub_name = version.text
+                    else:
+                        sub_name = one_box.find("strong", {"class": "list_title"}).text
 
                     if video.info["type"] == "movie" and "美剧字幕" in sub_name:
                         continue
 
+                    # url
                     a = one_box.find("a")
                     text = a.text
                     sub_url = ZimuzuDownloader.site_url + a.attrs["href"]
-                    type_score = 0
-                    type_score += ("英文" in text) * 1
-                    type_score += ("繁体" in text) * 2
-                    type_score += ("简体" in text) * 4
-                    type_score += ("中英" in text) * 8
-                    sub_dict[sub_name] = {
-                        "lan": type_score,
-                        "link": sub_url,
-                        "session": None,
-                    }
-                    if len(sub_dict) >= sub_num:
+
+                    # languages
+                    languages = []
+                    if "英文" in text:
+                        languages.append(Language.ENG)
+                    if "繁体" in text:
+                        languages.append(Language.CHT)
+                    if "简体" in text:
+                        languages.append(Language.CHS)
+                    if "中英" in text:
+                        languages.append(Language.DOUBLE)
+
+                    # TODO: is package
+                    # package_keywords = ('打包', 'complete season', '合集')
+                    is_package = False
+
+                    subtitle = Subtitle(
+                        sub_name, sub_url, languages, is_package=is_package
+                    )
+
+                    results.append(SearchResult(subtitle, None, ZimuzuDownloader.name))
+
+                    if len(results) >= sub_num:
                         del keywords[:]  # 字幕条数达到上限，清空keywords
                         break
 
@@ -74,16 +89,11 @@ class ZimuzuDownloader(Downloader):
 
             break
 
-        # 第一个候选字幕没有双语
-        if len(sub_dict.items()) > 0 and list(sub_dict.items())[0][1]["lan"] < 8:
-            sub_dict = order_dict(
-                sorted(sub_dict.items(), key=lambda e: e[1]["lan"], reverse=True)
-            )
-        return sub_dict
+        return results
 
-    def download_file(self, file_name, sub_url, session=None):
-
-        s = requests.session()
+    def download_file(self, result):
+        s = requests.session() if not result.session else result.session
+        sub_url = result.subtitle.url
         header = Downloader.header.copy()
         r = s.get(sub_url, headers=Downloader.header)
         bs_obj = BeautifulSoup(r.text, "html.parser")
@@ -102,13 +112,13 @@ class ZimuzuDownloader(Downloader):
                 if response.headers.get("content-length"):
                     # 内容体总大小
                     content_size = int(response.headers["content-length"])
-                    bar = ProgressBar("Get", file_name.strip(), content_size)
+                    bar = ProgressBar("Get", result.subtitle.name, content_size)
                     sub_data_bytes = b""
                     for data in response.iter_content(chunk_size=chunk_size):
                         sub_data_bytes += data
                         bar.refresh(len(sub_data_bytes))
                 else:
-                    bar = ProgressBar("Get", file_name.strip())
+                    bar = ProgressBar("Get", result.subtitle.name)
                     sub_data_bytes = b""
                     for data in response.iter_content(chunk_size=chunk_size):
                         sub_data_bytes += data
@@ -124,13 +134,6 @@ class ZimuzuDownloader(Downloader):
         elif "7z" in download_link:
             datatype = ".7z"
         else:
-            if ".rar" in file_name:
-                datatype = ".rar"
-            elif ".zip" in file_name:
-                datatype = ".zip"
-            elif ".7z" in file_name:
-                datatype = ".7z"
-            else:
-                datatype = "Unknown"
+            datatype = "Unknown"
 
         return datatype, sub_data_bytes, ""

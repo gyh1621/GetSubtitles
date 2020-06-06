@@ -1,0 +1,25 @@
+downloader.py doc
+subtitle type score test
+readme: minimum version 3.6 enum
+
+ongoing:
+Downloader.get_subtitles return format changes:
+1. main
+2. test
+3. docs
+
+choice prefix
+
+todo:
+Downloader.download_subtitls
+main.get_search_results
+
+
+choose archive
+
+
+util.py has many unnecessary functions which can be organized into one class, one that manipulates Subtitle, decompressing, guessing/choosing and extracting single file from Subtitle.
+Maybe these functions can be added to Subtitle. After passing SearchResult to Downloader.download_file, Subtitle in SearchResult can be filled with file data also its datatype.
+
+Can start from main.py:220
+
