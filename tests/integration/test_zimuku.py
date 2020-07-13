@@ -26,6 +26,20 @@ class TestZimuku(unittest.TestCase):
         results = ZimukuDownloader().get_subtitles(video, sub_num=1)
         self.assertEqual(len(results), 1)
 
+    def test_redirect_url(self):
+        # from issue #72
+        video_name = "The.Flash.S01E01.mkv"
+        video = Video(video_name)
+        results = ZimukuDownloader().get_subtitles(video, sub_num=1)
+        self.assertEqual(len(results), 1)
+
+    def test_no_redirect_url(self):
+        # from issue #72
+        video_name = "the.expanse.s01e01.mkv"
+        video = Video(video_name)
+        results = ZimukuDownloader().get_subtitles(video, sub_num=1)
+        self.assertEqual(len(results), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

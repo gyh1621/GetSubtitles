@@ -19,8 +19,8 @@ class ZimuzuDownloader(Downloader):
 
     name = "zimuzu"
     choice_prefix = "[ZIMUZU]"
-    site_url = "http://www.rrys2019.com"
-    search_url = "http://www.rrys2019.com/search?keyword={0}&type=subtitle"
+    site_url = "http://www.rrys2020.com"
+    search_url = "http://www.rrys2020.com/search?keyword={0}&type=subtitle"
 
     def get_subtitles(self, video, sub_num=5):
 

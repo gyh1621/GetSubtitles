@@ -131,10 +131,20 @@ class ZimukuDownloader(Downloader):
         s.headers.update(Downloader.header)
 
         sub_dict = dict()
+        pattern = r"url\s*=\s*'([^']*)'\s*\+\s*url"
         for i in range(len(keywords), 1, -1):
             keyword = ".".join(keywords[:i])
             r = s.get(ZimukuDownloader.search_url + keyword, timeout=10)
             html = r.text
+
+            # parse window.location
+            parts = re.findall(pattern, html)
+            while parts:
+                parts.reverse()
+                redirect_url = urljoin(ZimukuDownloader.site_url, "".join(parts))
+                r = s.get(redirect_url, timeout=10)
+                html = r.text
+                parts = re.findall(pattern, html)
 
             if "搜索不到相关字幕" in html:
                 continue
